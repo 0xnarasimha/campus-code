@@ -45,7 +45,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password =
           typeof credentials?.password === "string" ? credentials.password : "";
         if (!email || !password) return null;
-        const user = await db.user.findUnique({ where: { email } });
+        let user;
+        try {
+          user = await db.user.findUnique({ where: { email } });
+        } catch {
+          // DB down (DATABASE_URL unset, engine failed, connection
+          // refused): fail closed as bad credentials — loginAction maps
+          // this to generic "Invalid credentials", never a 500/stack.
+          return null;
+        }
         if (!user) return null;
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;

@@ -9,6 +9,43 @@ import { safeRedirectTo } from "@/lib/safe-redirect";
 
 const HANDLE_RE = /^[A-Za-z0-9_]{3,20}$/;
 
+const DB_UNREACHABLE_MESSAGE =
+  "Database not reachable. Set DATABASE_URL (see README) and try again.";
+
+// Prisma initialization/connection failures surface as
+// PrismaClientInitializationError (DATABASE_URL unset/invalid, engine
+// failed to start) or KnownRequestErrors P1000–P1017 (auth, host
+// unreachable, DB missing, connection closed). Message matching covers
+// variants across Prisma versions (incl. Prisma 7 driver-adapter errors).
+function isDbUnreachable(err: unknown): boolean {
+  if (err instanceof Prisma.PrismaClientInitializationError) return true;
+  if (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    [
+      "P1000",
+      "P1001",
+      "P1002",
+      "P1003",
+      "P1008",
+      "P1009",
+      "P1010",
+      "P1017",
+    ].includes(err.code)
+  ) {
+    return true;
+  }
+  const msg = err instanceof Error ? `${err.name}: ${err.message}` : "";
+  return (
+    msg.includes("PrismaClientInitializationError") ||
+    msg.includes("Can't reach database server") ||
+    msg.includes("Environment variable not found: DATABASE_URL") ||
+    msg.includes("invalid datasource") ||
+    msg.includes("Connection closed") ||
+    msg.includes("connect ECONNREFUSED") ||
+    msg.includes("getaddrinfo ENOTFOUND")
+  );
+}
+
 type ActionResult =
   | { ok: true; redirectTo?: string }
   | { ok: false; error: string };
@@ -57,10 +94,19 @@ export async function signupAction(input: {
     return { ok: false, error: "Password must be at least 8 characters." };
   }
 
-  const existing = await db.user.findFirst({
-    where: { OR: [{ handle }, { email }] },
-    select: { id: true },
-  });
+  let existing;
+  try {
+    existing = await db.user.findFirst({
+      where: { OR: [{ handle }, { email }] },
+      select: { id: true },
+    });
+  } catch (err) {
+    if (isDbUnreachable(err)) {
+      return { ok: false, error: DB_UNREACHABLE_MESSAGE };
+    }
+    console.error("signupAction failed:", err);
+    return { ok: false, error: "Something went wrong, try again" };
+  }
   if (existing) {
     return { ok: false, error: "Handle or email already taken" };
   }
@@ -85,6 +131,9 @@ export async function signupAction(input: {
       err.code === "P2002"
     ) {
       return { ok: false, error: "Handle or email already taken" };
+    }
+    if (isDbUnreachable(err)) {
+      return { ok: false, error: DB_UNREACHABLE_MESSAGE };
     }
     console.error("signupAction failed:", err);
     return { ok: false, error: "Something went wrong, try again" };
@@ -119,6 +168,9 @@ export async function loginAction(input: {
   } catch (err) {
     if (err instanceof AuthError) {
       return { ok: false, error: "Invalid credentials" };
+    }
+    if (isDbUnreachable(err)) {
+      return { ok: false, error: DB_UNREACHABLE_MESSAGE };
     }
     throw err;
   }
