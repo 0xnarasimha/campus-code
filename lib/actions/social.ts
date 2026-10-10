@@ -193,6 +193,8 @@ export async function toggleFollow(handle: string): Promise<ToggleFollowResult> 
 export type BumpShareResult = { ok: true; shares: number } | Failure;
 
 export async function bumpShare(postId: string): Promise<BumpShareResult> {
+  const userId = await currentUserId();
+  if (!userId) return { ok: false, error: "You must be logged in" };
   try {
     const post = await db.post.update({
       where: { id: postId },
