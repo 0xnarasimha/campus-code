@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,15 @@ export function RankingRow({ entry, rank }: { entry: RankingEntry; rank: number 
       <Avatar name={entry.name} className="h-9 w-9 text-xs" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-ig-text dark:text-white">
-          {entry.name}{" "}
-          <span className="font-normal text-ig-secondary">@{entry.handle}</span>
+          <Link href={`/profile/${entry.handle}`} className="hover:underline">
+            {entry.name}
+          </Link>{" "}
+          <Link
+            href={`/profile/${entry.handle}`}
+            className="font-normal text-ig-secondary hover:underline"
+          >
+            @{entry.handle}
+          </Link>
         </p>
         <div className="mt-1 flex flex-wrap gap-1">
           {stacks.map((stack) => (

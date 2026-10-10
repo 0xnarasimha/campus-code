@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Info, Send } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -45,12 +46,22 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold text-ig-text dark:text-white">
-            {conversation.name}
+            <Link
+              href={`/profile/${conversation.handle}`}
+              className="hover:underline"
+            >
+              {conversation.name}
+            </Link>
           </p>
           <p className="truncate text-sm text-ig-secondary">
             {conversation.online ? "Active now" : "Away"}
             <span aria-hidden="true"> · </span>
-            <span>@{conversation.handle}</span>
+            <Link
+              href={`/profile/${conversation.handle}`}
+              className="hover:underline"
+            >
+              @{conversation.handle}
+            </Link>
           </p>
         </div>
         {onToggleInfo && (

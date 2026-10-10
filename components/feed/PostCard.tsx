@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   BadgeCheck,
   Bookmark,
@@ -101,7 +102,12 @@ export function PostCard({ post }: { post: FeedPost }) {
           <Avatar name={post.authorInitials} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1 text-sm font-semibold text-ig-text dark:text-white">
-              <span className="truncate">@{post.author}</span>
+              <Link
+                href={`/profile/${post.author}`}
+                className="truncate hover:underline"
+              >
+                @{post.author}
+              </Link>
               {post.verified && (
                 <BadgeCheck
                   className="h-4 w-4 shrink-0 text-ig-blue"

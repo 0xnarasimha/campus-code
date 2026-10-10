@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,9 +31,15 @@ function PodiumCard({ entry, rank }: { entry: RankingEntry; rank: number }) {
         <Avatar name={entry.name} className="h-12 w-12 text-base" />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-ig-text dark:text-white">
-            {entry.name}
+            <Link href={`/profile/${entry.handle}`} className="hover:underline">
+              {entry.name}
+            </Link>
           </p>
-          <p className="truncate text-xs text-ig-secondary">@{entry.handle}</p>
+          <p className="truncate text-xs text-ig-secondary">
+            <Link href={`/profile/${entry.handle}`} className="hover:underline">
+              @{entry.handle}
+            </Link>
+          </p>
         </div>
         <p className="text-sm font-bold text-ig-text dark:text-white">
           {entry.points.toLocaleString()} pts

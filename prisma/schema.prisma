@@ -35,6 +35,7 @@ model User {
   followers     Follow[]       @relation("followedBy")
   sentMessages  Message[]
   conversations Conversation[]
+  createdSpots  StudySpot[]
 }
 
 model Account {
@@ -145,4 +146,7 @@ model StudySpot {
   quietness Int
   openSeats Int
   amenities String[]
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
 }
