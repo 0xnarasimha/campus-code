@@ -97,12 +97,12 @@ function LoginForm() {
 
       {/* Auth column */}
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-10">
-        <main className="w-full max-w-sm border border-ig-border bg-surface px-8 pb-6 pt-8">
-          <h1 className="text-center font-script text-5xl leading-tight">
+        <main className="w-full max-w-md border border-ig-border bg-surface p-8">
+          <h1 className="text-center font-script text-6xl leading-tight md:text-7xl">
             <span className="text-ig-text">Campus </span>
             <span className="text-ig-blue">Code</span>
           </h1>
-          <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-2.5">
+          <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-3.5">
             <label className="sr-only" htmlFor="login-email">
               Email
             </label>
@@ -114,7 +114,7 @@ function LoginForm() {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded border border-ig-border bg-bg px-3 py-2.5 text-sm text-ig-text outline-none placeholder:text-ig-secondary focus:border-ig-blue"
+              className="h-14 rounded border border-ig-border bg-bg px-4 text-lg text-ig-text outline-none placeholder:text-ig-secondary focus:border-ig-blue"
             />
             <label className="sr-only" htmlFor="login-password">
               Password
@@ -127,7 +127,7 @@ function LoginForm() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded border border-ig-border bg-bg px-3 py-2.5 text-sm text-ig-text outline-none placeholder:text-ig-secondary focus:border-ig-blue"
+              className="h-14 rounded border border-ig-border bg-bg px-4 text-lg text-ig-text outline-none placeholder:text-ig-secondary focus:border-ig-blue"
             />
             {error && (
               <p role="alert" className="text-sm text-red-600 dark:text-red-400">
@@ -137,14 +137,14 @@ function LoginForm() {
             <button
               type="submit"
               disabled={pending}
-              className="mt-1.5 rounded-lg bg-ig-blue px-3 py-2 text-sm font-semibold text-white transition-opacity hover:bg-ig-blue-hover disabled:opacity-60"
+              className="mt-2 h-14 rounded-lg bg-ig-blue px-3 text-lg font-semibold text-white transition-opacity hover:bg-ig-blue-hover disabled:opacity-60"
             >
               {pending ? "Logging in…" : "Log in"}
             </button>
           </form>
           {googleEnabled && (
             <>
-              <div className="my-4 flex items-center gap-3 text-xs font-semibold text-ig-secondary">
+              <div className="my-5 flex items-center gap-3 text-sm font-semibold text-ig-secondary">
                 <span className="h-px flex-1 bg-ig-border" />
                 OR
                 <span className="h-px flex-1 bg-ig-border" />
@@ -156,7 +156,7 @@ function LoginForm() {
                     redirectTo: safeRedirectTo(searchParams.get("callbackUrl")),
                   })
                 }
-                className="flex w-full items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-ig-blue"
+                className="flex h-14 w-full items-center justify-center gap-2 px-3 text-base font-semibold text-ig-blue"
               >
                 <span
                   aria-hidden="true"
@@ -168,19 +168,19 @@ function LoginForm() {
               </button>
             </>
           )}
-          <div className="mt-4 text-center">
-            <a href="#" className="text-xs text-ig-secondary">
+          <div className="mt-5 text-center">
+            <a href="#" className="text-sm text-ig-secondary">
               Forgot password?
             </a>
           </div>
         </main>
-        <div className="mt-3 w-full max-w-sm border border-ig-border bg-surface px-8 py-5 text-center text-sm text-ig-text">
+        <div className="mt-4 w-full max-w-md border border-ig-border bg-surface px-8 py-6 text-center text-base text-ig-text">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="font-semibold text-ig-blue">
             Sign up
           </Link>
         </div>
-        <footer className="mt-6 text-center text-xs text-ig-secondary">
+        <footer className="mt-8 text-center text-sm text-ig-secondary">
           About • Help • Privacy • © 2026 Campus Code
         </footer>
       </div>
