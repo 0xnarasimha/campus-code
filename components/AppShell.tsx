@@ -8,7 +8,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const NAV = [
   { label: "Home", href: "/", icon: Home },
-  { label: "Study Hub", href: "/study-hub", icon: MapPin },
+  { label: "Study Hub", href: "/study", icon: MapPin },
   { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { label: "Messages", href: "/messages", icon: Send },
   { label: "Profile", href: "/profile", icon: User },
@@ -33,6 +33,8 @@ function Logo() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isWide =
+    pathname.startsWith("/leaderboard") || pathname.startsWith("/profile");
 
   return (
     <div className="min-h-full">
@@ -76,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="pb-20 lg:pb-0 lg:pl-60">
-        <div className="mx-auto w-full max-w-2xl px-4 py-4">{children}</div>
+        <div className={cn("mx-auto w-full px-4 py-4", isWide ? "max-w-5xl" : "max-w-2xl")}>{children}</div>
       </main>
 
       {/* Mobile bottom nav */}
