@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-full">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-ig-border bg-white lg:flex dark:border-white/10 dark:bg-black">
+      <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-border bg-surface lg:flex">
         <div className="flex h-16 items-center px-5">
           <Logo />
         </div>
@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile top header */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-ig-border bg-white/90 px-4 backdrop-blur lg:hidden dark:border-white/10 dark:bg-black/90">
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur lg:hidden">
         <Logo />
         <ThemeToggle />
       </header>
@@ -84,7 +84,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile bottom nav */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-ig-border bg-white/95 backdrop-blur lg:hidden dark:border-white/10 dark:bg-black/95"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur lg:hidden"
       >
         <div className="grid grid-cols-5">
           {NAV.map(({ label, href, icon: Icon }) => {

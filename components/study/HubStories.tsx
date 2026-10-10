@@ -38,7 +38,7 @@ function Circle({
             : "story-gradient rounded-full p-[2.5px]"
         }
       >
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-xs font-bold text-ig-text ring-2 ring-white dark:bg-black dark:text-white dark:ring-black">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-surface text-xs font-bold text-text ring-2 ring-surface">
           {label === "All Hubs" ? "All" : initials(label)}
         </span>
       </span>

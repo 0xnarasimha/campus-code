@@ -109,7 +109,7 @@ export default function LeaderboardPage() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search by handle or name…"
         aria-label="Search leaderboard"
-        className="h-10 w-full rounded-lg border border-ig-border bg-white px-3 text-sm text-ig-text outline-none placeholder:text-ig-secondary focus:border-ig-blue dark:border-white/10 dark:bg-white/5 dark:text-white"
+        className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text outline-none placeholder:text-muted focus:border-ig-blue"
       />
       <LeaderboardBody key={period} period={period} query={query} />
     </div>

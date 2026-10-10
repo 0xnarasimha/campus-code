@@ -14,7 +14,7 @@ export function RankingRow({ entry, rank }: { entry: RankingEntry; rank: number 
   const flat = entry.delta === 0;
 
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-ig-border bg-white px-3 py-2.5 dark:border-white/10 dark:bg-white/5">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5">
       <span className="w-7 shrink-0 font-mono text-sm font-bold text-ig-secondary">
         {rank}
       </span>

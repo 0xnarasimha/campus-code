@@ -3,23 +3,46 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-text: #262626;
+  --color-muted: #737373;
+  --color-border: #dbdbdb;
+  --color-subtle: #efefef;
+  --color-ig-blue: #0095f6;
+  --color-ig-blue-hover: #1877f2;
+  /* Back-compat aliases for existing ig-* classes (same palette). */
   --color-ig-border: #dbdbdb;
   --color-ig-subtle: #efefef;
   --color-ig-text: #262626;
   --color-ig-secondary: #737373;
-  --color-ig-blue: #0095f6;
-  --color-ig-blue-hover: #1877f2;
+}
+
+.dark {
+  --color-bg: #0d1117;
+  --color-surface: #161b22;
+  --color-text: #e6edf3;
+  --color-muted: #8b949e;
+  --color-border: #30363d;
+  --color-subtle: #21262d;
+  --color-ig-border: #30363d;
+  --color-ig-subtle: #21262d;
+  --color-ig-text: #e6edf3;
+  --color-ig-secondary: #8b949e;
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #262626;
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
 }
 
 .scrollbar-hide {
