@@ -2,12 +2,16 @@
 
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { signIn } from "@/auth";
 import { db } from "@/lib/db";
+import { safeRedirectTo } from "@/lib/safe-redirect";
 
 const HANDLE_RE = /^[A-Za-z0-9_]{3,20}$/;
 
-type ActionResult = { ok: true } | { ok: false; error: string };
+type ActionResult =
+  | { ok: true; redirectTo?: string }
+  | { ok: false; error: string };
 
 function initialsFor(name: string): string {
   const initials = name
@@ -65,23 +69,44 @@ export async function signupAction(input: {
         avatarInitials: initialsFor(name),
       },
     });
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Handle or email already taken" };
+  } catch (err) {
+    // Race lost (or other constraint hit): friendly message only for P2002.
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return { ok: false, error: "Handle or email already taken" };
+    }
+    console.error("signupAction failed:", err);
+    return { ok: false, error: "Something went wrong, try again" };
   }
+
+  // Auto-sign-in (spec §5): land on `/` authenticated so middleware's
+  // auth-route guard doesn't bounce the new user back to /login. If the
+  // sign-in itself fails, the account still exists — return ok and let the
+  // client fall back to a manual login.
+  try {
+    await signIn("credentials", { email, password, redirect: false });
+  } catch (err) {
+    console.error("signupAction auto sign-in failed:", err);
+  }
+  return { ok: true };
 }
 
 export async function loginAction(input: {
   email: string;
   password: string;
+  callbackUrl?: unknown;
 }): Promise<ActionResult> {
+  const redirectTo = safeRedirectTo(input.callbackUrl);
   try {
     await signIn("credentials", {
       email: input.email.trim().toLowerCase(),
       password: input.password,
       redirect: false,
+      redirectTo,
     });
-    return { ok: true };
+    return { ok: true, redirectTo };
   } catch (err) {
     if (err instanceof AuthError) {
       return { ok: false, error: "Invalid credentials" };

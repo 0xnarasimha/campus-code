@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { loginAction } from "@/lib/actions/auth";
+import { safeRedirectTo } from "@/lib/safe-redirect";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,9 +19,10 @@ export default function LoginPage() {
     setError(null);
     setPending(true);
     try {
-      const result = await loginAction({ email, password });
+      const callbackUrl = safeRedirectTo(searchParams.get("callbackUrl"));
+      const result = await loginAction({ email, password, callbackUrl });
       if (result.ok) {
-        router.push("/");
+        router.push(result.redirectTo ?? callbackUrl);
         router.refresh();
       } else {
         setError(result.error);
@@ -79,5 +82,13 @@ export default function LoginPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

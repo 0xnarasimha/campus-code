@@ -1,31 +1,17 @@
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "./lib/db";
+import { authConfig } from "./auth.config";
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      handle: string;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
-    handle: string;
-  }
-}
-
-interface TokenExtras {
-  id?: string;
-  handle?: string;
-}
-
+// Server-only auth: spreads the edge-safe authConfig (callbacks, JWT
+// session, trustHost) and adds the Prisma adapter plus the full Credentials
+// provider whose authorize() needs bcrypt + db. Never import this module
+// from middleware.ts — import { auth } from "./auth.config" instead.
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(db),
-  trustHost: true,
-  session: { strategy: "jwt" },
   providers: [
     Credentials({
       id: "credentials",
@@ -52,22 +38,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt: async ({ token, user }) => {
-      if (user) {
-        const t = token as typeof token & TokenExtras;
-        t.id = user.id;
-        t.handle = user.handle;
-      }
-      return token;
-    },
-    session: async ({ session, token }) => {
-      const t = token as TokenExtras;
-      if (session.user) {
-        session.user.id = typeof t.id === "string" ? t.id : "";
-        session.user.handle = typeof t.handle === "string" ? t.handle : "";
-      }
-      return session;
-    },
-  },
 });
