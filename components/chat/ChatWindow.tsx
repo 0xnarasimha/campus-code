@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Info, Send } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { MeetupCard } from "@/components/chat/MeetupCard";
 import { cn } from "@/lib/utils";
 import type { Conversation, Message } from "@/lib/mock-data";
 
@@ -21,6 +22,18 @@ const QUICK_PILLS = [
   { label: "Send LeetCode Link", text: "https://leetcode.com/problems/two-sum/" },
   { label: "Send Code Snippet", text: "```python\ndef two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n```" },
 ];
+
+// DM-thread meetup card: a message carrying "[meetup:<id>]" renders the
+// MeetupCard (request row: place/note/status + recipient Accept/Decline)
+// above the plain text. Send-logic below is untouched.
+function meetupIdOf(text: string): string | null {
+  const m = /\[meetup:([A-Za-z0-9_-]+)\]/.exec(text);
+  return m ? (m[1] as string) : null;
+}
+
+function stripMarker(text: string): string {
+  return text.replace(/\[meetup:[A-Za-z0-9_-]+\]\s*/, "").trim();
+}
 
 export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoOpen }: ChatWindowProps) {
   const [draft, setDraft] = useState("");
@@ -80,17 +93,22 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 md:px-5">
         {messages.map((m) => {
           const mine = m.from === "me";
+          const meetupId = meetupIdOf(m.text);
+          const text = meetupId ? stripMarker(m.text) : m.text;
           return (
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+              <div className="flex max-w-[80%] flex-col gap-2">
+                {meetupId && <MeetupCard meetupId={meetupId} />}
+                {text && (
               <div
                 className={cn(
-                  "max-w-[80%] rounded-3xl px-5 py-3 text-base leading-7",
+                  "rounded-3xl px-5 py-3 text-base leading-7",
                   mine
                     ? "rounded-br-lg bg-ig-blue text-white"
                     : "rounded-bl-lg bg-ig-subtle text-ig-text dark:bg-white/10 dark:text-white"
                 )}
               >
-                <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                <p className="whitespace-pre-wrap break-words">{text}</p>
                 <p
                   className={cn(
                     "mt-0.5 text-right text-[11px]",
@@ -99,6 +117,8 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
                 >
                   {m.time}
                 </p>
+              </div>
+                )}
               </div>
             </div>
           );

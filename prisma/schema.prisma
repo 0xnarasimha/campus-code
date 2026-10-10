@@ -36,6 +36,8 @@ model User {
   sentMessages  Message[]
   conversations Conversation[]
   createdSpots  StudySpot[]
+  sentMeetups     MeetupRequest[] @relation("meetupRequester")
+  receivedMeetups MeetupRequest[] @relation("meetupRecipient")
 }
 
 model Account {
@@ -135,6 +137,9 @@ model Message {
   sender         User         @relation(fields: [senderId], references: [id])
   body           String       @db.Text
   createdAt      DateTime     @default(now())
+
+  meetupRequestId String?
+  meetupRequest   MeetupRequest? @relation(fields: [meetupRequestId], references: [id], onDelete: SetNull)
 }
 
 model StudySpot {
@@ -149,4 +154,21 @@ model StudySpot {
 
   createdById String?
   createdBy   User?   @relation(fields: [createdById], references: [id])
+}
+
+model MeetupRequest {
+  id          String   @id @default(cuid())
+  requesterId String
+  requester   User     @relation("meetupRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User     @relation("meetupRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  place       String
+  note        String   @default("")
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+
+  messages Message[]
+
+  @@index([requesterId])
+  @@index([recipientId])
 }

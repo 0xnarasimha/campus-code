@@ -1,21 +1,88 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { InfoRail } from "@/components/chat/InfoRail";
-import { conversations, messagesById, type Message } from "@/lib/mock-data";
+import {
+  conversations,
+  messagesById,
+  type Conversation,
+  type Message,
+} from "@/lib/mock-data";
+import { getMyMeetups } from "@/lib/actions/meetups";
 import { cn } from "@/lib/utils";
+
+function initialsOf(name: string): string {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
 
 export default function MessagesPage() {
   const [activeId, setActiveId] = useState(conversations[0]?.id ?? "");
+  const [convs, setConvs] = useState<Conversation[]>(conversations);
   const [threads, setThreads] = useState<Record<string, Message[]>>(messagesById);
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   const [infoOpen, setInfoOpen] = useState(false);
 
-  const conversation = conversations.find((c) => c.id === activeId) ?? conversations[0];
+  const conversation = convs.find((c) => c.id === activeId) ?? convs[0];
   const messages = threads[conversation.id] ?? [];
+
+  // Real meetup rows merged into the mock threads: each request involving
+  // the viewer becomes a "[meetup:<id>] …" message (rendered as MeetupCard
+  // by ChatWindow) in the 1:1 thread keyed by the other party's handle.
+  // Threads for unknown handles are appended to the list. Mock send-logic
+  // below is untouched.
+  useEffect(() => {
+    let live = true;
+    getMyMeetups().then((res) => {
+      if (!live || !res.ok) return;
+      const merged: Conversation[] = [...conversations];
+      for (const m of res.meetups) {
+        if (!merged.some((c) => c.handle === m.otherHandle)) {
+          merged.unshift({
+            id: `dm-${m.otherHandle}`,
+            name: m.otherName,
+            handle: m.otherHandle,
+            preview: `Meetup request: ${m.place}`,
+            time: "Now",
+            unread: m.direction === "incoming" && m.status === "pending" ? 1 : 0,
+            online: false,
+            initials: initialsOf(m.otherName),
+          });
+        }
+      }
+      setConvs(merged);
+      setThreads((prev) => {
+        const next: Record<string, Message[]> = { ...prev };
+        const idByHandle = new Map(merged.map((c) => [c.handle, c.id]));
+        for (const m of res.meetups) {
+          const tid = idByHandle.get(m.otherHandle);
+          if (!tid) continue;
+          const existing = next[tid] ?? [];
+          if (existing.some((x) => x.text.includes(`[meetup:${m.id}]`))) continue;
+          next[tid] = [
+            ...existing,
+            {
+              id: `meetup-${m.id}`,
+              from: m.direction === "outgoing" ? "me" : "them",
+              text: `[meetup:${m.id}] Meetup request: ${m.place}${m.note ? ` — ${m.note}` : ""}`,
+              time: "Now",
+            },
+          ];
+        }
+        return next;
+      });
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   function handleSelect(id: string) {
     setActiveId(id);
@@ -69,7 +136,7 @@ export default function MessagesPage() {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">
             <ConversationList
-              conversations={conversations}
+              conversations={convs}
               activeId={conversation.id}
               onSelect={handleSelect}
             />
