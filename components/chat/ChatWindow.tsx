@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Info, Send } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,8 @@ interface ChatWindowProps {
   conversation: Conversation;
   messages: Message[];
   onSend: (text: string) => void;
+  onToggleInfo?: () => void;
+  infoOpen?: boolean;
 }
 
 const QUICK_PILLS = [
@@ -19,7 +21,7 @@ const QUICK_PILLS = [
   { label: "Send Code Snippet", text: "```python\ndef two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen:\n            return [seen[target - n], i]\n        seen[n] = i\n```" },
 ];
 
-export function ChatWindow({ conversation, messages, onSend }: ChatWindowProps) {
+export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoOpen }: ChatWindowProps) {
   const [draft, setDraft] = useState("");
 
   function send() {
@@ -41,7 +43,7 @@ export function ChatWindow({ conversation, messages, onSend }: ChatWindowProps) 
             />
           )}
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-ig-text dark:text-white">
             {conversation.name}
           </p>
@@ -49,6 +51,17 @@ export function ChatWindow({ conversation, messages, onSend }: ChatWindowProps) 
             {conversation.online ? "Active now" : `@${conversation.handle}`}
           </p>
         </div>
+        {onToggleInfo && (
+          <button
+            type="button"
+            onClick={onToggleInfo}
+            aria-label="Toggle conversation info"
+            aria-pressed={infoOpen}
+            className="rounded-full p-2 text-ig-secondary hover:bg-ig-subtle dark:hover:bg-white/10 xl:hidden"
+          >
+            <Info className="h-4 w-4" />
+          </button>
+        )}
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
+import { InfoRail } from "@/components/chat/InfoRail";
 import { Card } from "@/components/ui/card";
 import { conversations, messagesById, type Message } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ export default function MessagesPage() {
   const [activeId, setActiveId] = useState(conversations[0]?.id ?? "");
   const [threads, setThreads] = useState<Record<string, Message[]>>(messagesById);
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const conversation = conversations.find((c) => c.id === activeId) ?? conversations[0];
   const messages = threads[conversation.id] ?? [];
@@ -19,6 +21,7 @@ export default function MessagesPage() {
   function handleSelect(id: string) {
     setActiveId(id);
     setMobileView("chat");
+    setInfoOpen(false);
   }
 
   function handleSend(text: string) {
@@ -35,7 +38,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="animate-fade-up mx-auto w-full max-w-4xl">
+    <div className="animate-fade-up mx-auto w-full max-w-6xl">
       <button
         type="button"
         onClick={() => setMobileView("list")}
@@ -48,7 +51,7 @@ export default function MessagesPage() {
         Back
       </button>
 
-      <Card className="grid min-h-[70vh] overflow-hidden md:grid-cols-[320px_1fr]">
+      <Card className="grid min-h-[70vh] overflow-hidden md:grid-cols-[300px_1fr] xl:grid-cols-[280px_1fr_260px]">
         <div
           className={cn(
             "min-h-0 border-ig-border dark:border-white/10 md:border-r",
@@ -77,7 +80,20 @@ export default function MessagesPage() {
             conversation={conversation}
             messages={messages}
             onSend={handleSend}
+            onToggleInfo={() => setInfoOpen((v) => !v)}
+            infoOpen={infoOpen}
           />
+        </div>
+
+        <div
+          className={cn(
+            "min-h-0 border-ig-border dark:border-white/10 xl:border-l",
+            mobileView === "list" ? "hidden" : infoOpen ? "block border-t xl:block" : "hidden xl:block"
+          )}
+        >
+          <div className="max-h-[70vh] overflow-y-auto">
+            <InfoRail conversation={conversation} messages={messages} />
+          </div>
         </div>
       </Card>
     </div>
