@@ -44,8 +44,9 @@ export function PostGrid({ items }: { items: ProfileGridItem[] }) {
           <article
             key={item.id}
             role="listitem"
+            tabIndex={0}
             className={cn(
-              "group relative flex aspect-square flex-col justify-between overflow-hidden rounded-md p-2 text-white sm:p-3",
+              "group relative flex aspect-square flex-col justify-between overflow-hidden rounded-md p-2 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:p-3",
               KIND_STYLES[kind]
             )}
           >
@@ -59,7 +60,7 @@ export function PostGrid({ items }: { items: ProfileGridItem[] }) {
               </p>
             </div>
             <div
-              className="absolute inset-0 flex items-center justify-center gap-4 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+              className="absolute inset-0 flex items-center justify-center gap-4 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100"
               aria-hidden
             >
               <span className="flex items-center gap-1 text-sm font-semibold">

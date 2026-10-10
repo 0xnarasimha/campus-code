@@ -55,8 +55,8 @@ function PodiumCard({ entry, rank }: { entry: RankingEntry; rank: number }) {
 export function Podium({ top3 }: { top3: RankingEntry[] }) {
   return (
     <div className="grid grid-cols-3 gap-3">
-      {top3.map((entry, i) => (
-        <PodiumCard key={entry.handle} entry={entry} rank={i + 1} />
+      {top3.map((entry) => (
+        <PodiumCard key={entry.handle} entry={entry} rank={entry.rank} />
       ))}
     </div>
   );
