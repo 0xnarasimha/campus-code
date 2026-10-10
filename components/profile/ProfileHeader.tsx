@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { BadgeCheck, Link2, Share } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toggleFollow } from "@/lib/actions/social";
 import type { Profile } from "@/lib/mock-data";
 
 export function ProfileHeader({
@@ -14,6 +15,25 @@ export function ProfileHeader({
   isOwn?: boolean;
 }) {
   const [following, setFollowing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onToggleFollow() {
+    const prev = following;
+    setFollowing(!prev);
+    setError(null);
+    try {
+      const res = await toggleFollow(profile.handle);
+      if (!res.ok) {
+        setFollowing(prev);
+        setError(res.error);
+      } else {
+        setFollowing(res.following);
+      }
+    } catch {
+      setFollowing(prev);
+      setError("Something went wrong, try again");
+    }
+  }
   const initials = profile.name
     .split(" ")
     .map((p) => p[0])
@@ -93,7 +113,7 @@ export function ProfileHeader({
           <>
             <button
               type="button"
-              onClick={() => setFollowing((v) => !v)}
+              onClick={() => void onToggleFollow()}
               aria-pressed={following}
               className={cn(
                 "flex-1 rounded-lg px-4 py-2 text-sm font-semibold",
@@ -114,6 +134,11 @@ export function ProfileHeader({
           </>
         )}
       </div>
+      {!isOwn && error && (
+        <p role="alert" className="text-xs text-rose-500">
+          {error}
+        </p>
+      )}
     </section>
   );
 }
