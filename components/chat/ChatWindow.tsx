@@ -32,23 +32,25 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <header className="flex shrink-0 items-center gap-3 border-b border-ig-border px-4 py-3 dark:border-white/10">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="flex shrink-0 items-center gap-3 border-b border-ig-border px-4 py-3 dark:border-white/10 md:px-5 md:py-4">
         <span className="relative">
-          <Avatar name={conversation.initials} />
+          <Avatar name={conversation.initials} className="h-12 w-12 text-base" />
           {conversation.online && (
             <span
               aria-label="Online"
-              className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-zinc-950"
+              className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-green-500 dark:border-zinc-950"
             />
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-ig-text dark:text-white">
+          <p className="truncate text-base font-bold text-ig-text dark:text-white">
             {conversation.name}
           </p>
-          <p className="text-xs text-ig-secondary">
-            {conversation.online ? "Active now" : `@${conversation.handle}`}
+          <p className="truncate text-sm text-ig-secondary">
+            {conversation.online ? "Active now" : "Away"}
+            <span aria-hidden="true"> · </span>
+            <span>@{conversation.handle}</span>
           </p>
         </div>
         {onToggleInfo && (
@@ -64,17 +66,17 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
         )}
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 md:px-5">
         {messages.map((m) => {
           const mine = m.from === "me";
           return (
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
               <div
                 className={cn(
-                  "max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-6",
+                  "max-w-[80%] rounded-3xl px-5 py-3 text-base leading-7",
                   mine
-                    ? "rounded-br-md bg-ig-blue text-white"
-                    : "rounded-bl-md bg-ig-subtle text-ig-text dark:bg-white/10 dark:text-white"
+                    ? "rounded-br-lg bg-ig-blue text-white"
+                    : "rounded-bl-lg bg-ig-subtle text-ig-text dark:bg-white/10 dark:text-white"
                 )}
               >
                 <p className="whitespace-pre-wrap break-words">{m.text}</p>
@@ -92,20 +94,20 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
         })}
       </div>
 
-      <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pb-1">
+      <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pb-2 pt-1 md:px-5">
         {QUICK_PILLS.map((p) => (
           <button
             key={p.label}
             type="button"
             onClick={() => setDraft((d) => (d ? `${d} ${p.text}` : p.text))}
-            className="shrink-0 rounded-full border border-ig-border px-2.5 py-1 text-xs font-medium text-ig-secondary hover:bg-ig-subtle dark:border-white/10 dark:hover:bg-white/10"
+            className="shrink-0 rounded-full border border-ig-border px-3 py-1.5 text-sm font-medium text-ig-secondary hover:bg-ig-subtle dark:border-white/10 dark:hover:bg-white/10"
           >
             {p.label}
           </button>
         ))}
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 border-t border-ig-border px-4 py-3 dark:border-white/10">
+      <div className="flex shrink-0 items-center gap-3 border-t border-ig-border px-4 py-4 dark:border-white/10 md:px-5">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -114,10 +116,16 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
           }}
           placeholder={`Message ${conversation.name}...`}
           aria-label="Message input"
-          className="h-10 flex-1 rounded-full bg-ig-subtle px-4 text-sm text-ig-text outline-none placeholder:text-ig-secondary dark:bg-white/10 dark:text-white"
+          className="h-14 flex-1 rounded-full bg-ig-subtle px-5 text-base text-ig-text outline-none placeholder:text-ig-secondary dark:bg-white/10 dark:text-white"
         />
-        <Button size="icon" onClick={send} disabled={!draft.trim()} aria-label="Send message">
-          <Send className="h-4 w-4" />
+        <Button
+          size="icon"
+          onClick={send}
+          disabled={!draft.trim()}
+          aria-label="Send message"
+          className="h-14 w-14 shrink-0 rounded-full"
+        >
+          <Send className="h-5 w-5" />
         </Button>
       </div>
     </div>

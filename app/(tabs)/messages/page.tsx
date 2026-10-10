@@ -5,7 +5,6 @@ import { ChevronLeft } from "lucide-react";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { InfoRail } from "@/components/chat/InfoRail";
-import { Card } from "@/components/ui/card";
 import { conversations, messagesById, type Message } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +37,19 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="animate-fade-up mx-auto w-full max-w-6xl">
+    <div
+      className={cn(
+        "animate-fade-up -m-4 flex h-[calc(100dvh-3.5rem-4rem-2rem)] w-[calc(100%+2rem)] flex-col overflow-x-clip",
+        // Break out of the AppShell max-w-2xl container on desktop and fill
+        // the full content width (viewport minus fixed sidebar, minus gutters).
+        "lg:-my-4 lg:ml-[calc(-1*((100vw-15rem-42rem)/2)-1rem)] lg:h-dvh lg:w-[calc(100vw-15rem-2rem)]"
+      )}
+    >
       <button
         type="button"
         onClick={() => setMobileView("list")}
         className={cn(
-          "mb-2 items-center gap-1 text-sm font-semibold text-ig-text dark:text-white md:hidden",
+          "mx-4 mt-3 items-center gap-1 text-sm font-semibold text-ig-text dark:text-white md:hidden",
           mobileView === "chat" ? "inline-flex" : "hidden"
         )}
       >
@@ -51,17 +57,17 @@ export default function MessagesPage() {
         Back
       </button>
 
-      <Card className="grid min-h-[70vh] overflow-hidden md:grid-cols-[300px_1fr] xl:grid-cols-[280px_1fr_260px]">
+      <div className="flex min-h-0 flex-1 flex-col bg-surface md:grid md:grid-cols-[300px_minmax(0,1fr)] md:divide-x md:divide-ig-border md:dark:divide-white/10 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
         <div
           className={cn(
-            "min-h-0 border-ig-border dark:border-white/10 md:border-r",
-            mobileView === "chat" ? "hidden md:block" : "block"
+            "min-h-0 flex-1 flex-col md:flex",
+            mobileView === "chat" ? "hidden md:flex" : "flex"
           )}
         >
-          <div className="border-b border-ig-border px-3 py-3 dark:border-white/10">
-            <h1 className="text-sm font-bold text-ig-text dark:text-white">Messages</h1>
+          <div className="shrink-0 border-b border-ig-border px-4 py-3 dark:border-white/10">
+            <h1 className="text-base font-bold text-ig-text dark:text-white">Messages</h1>
           </div>
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <ConversationList
               conversations={conversations}
               activeId={conversation.id}
@@ -72,8 +78,8 @@ export default function MessagesPage() {
 
         <div
           className={cn(
-            "min-h-[70vh]",
-            mobileView === "list" ? "hidden md:block" : "block"
+            "min-h-0 flex-1 flex-col md:flex",
+            mobileView === "list" ? "hidden md:flex" : "flex"
           )}
         >
           <ChatWindow
@@ -87,15 +93,19 @@ export default function MessagesPage() {
 
         <div
           className={cn(
-            "min-h-0 border-ig-border dark:border-white/10 xl:border-l",
-            mobileView === "list" ? "hidden" : infoOpen ? "block border-t xl:block" : "hidden xl:block"
+            "min-h-0 flex-col border-ig-border dark:border-white/10",
+            mobileView === "list"
+              ? "hidden"
+              : infoOpen
+                ? "flex border-t xl:flex"
+                : "hidden xl:flex"
           )}
         >
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <InfoRail conversation={conversation} messages={messages} />
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
