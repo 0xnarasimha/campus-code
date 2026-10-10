@@ -48,72 +48,100 @@ function LoginForm() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[80vh] w-full max-w-sm flex-col justify-center px-4 py-8">
-      <h1 className="text-2xl font-bold text-ig-text dark:text-white">
-        Log in to DevDb MBU
-      </h1>
-      <p className="mt-1 text-sm text-ig-secondary">
-        New here?{" "}
-        <Link href="/signup" className="font-medium text-ig-blue">
-          Create an account
-        </Link>
-      </p>
-      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm font-medium text-ig-text dark:text-white">
-          Email
+    <div className="flex min-h-dvh w-full flex-col items-center justify-center bg-bg px-4 py-10">
+      <main className="w-full max-w-sm border border-ig-border bg-surface px-8 pb-6 pt-8">
+        <div className="flex items-center justify-center gap-2">
+          <span
+            aria-hidden="true"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-ig-blue via-sky-500 to-violet-500 text-lg font-black text-white"
+          >
+            M
+          </span>
+          <span className="text-xl font-bold tracking-tight text-ig-text">
+            DevDb MBU
+          </span>
+        </div>
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-2.5">
+          <label className="sr-only" htmlFor="login-email">
+            Email
+          </label>
           <input
+            id="login-email"
             type="email"
             required
             autoComplete="email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-ig-border bg-surface px-3 py-2 text-sm font-normal outline-none focus:border-ig-blue dark:border-white/10"
+            className="rounded border border-ig-border bg-bg px-3 py-2.5 text-sm text-ig-text outline-none placeholder:text-ig-secondary focus:border-ig-blue"
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-ig-text dark:text-white">
-          Password
+          <label className="sr-only" htmlFor="login-password">
+            Password
+          </label>
           <input
+            id="login-password"
             type="password"
             required
             autoComplete="current-password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-ig-border bg-surface px-3 py-2 text-sm font-normal outline-none focus:border-ig-blue dark:border-white/10"
+            className="rounded border border-ig-border bg-bg px-3 py-2.5 text-sm text-ig-text outline-none placeholder:text-ig-secondary focus:border-ig-blue"
           />
-        </label>
-        {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-lg bg-ig-blue px-3 py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
-        >
-          {pending ? "Logging in…" : "Log in"}
-        </button>
-      </form>
-      {googleEnabled && (
-        <>
-          <div className="my-4 flex items-center gap-2 text-xs text-ig-secondary">
-            <span className="h-px flex-1 bg-ig-border dark:bg-white/10" />
-            or
-            <span className="h-px flex-1 bg-ig-border dark:bg-white/10" />
-          </div>
+          {error && (
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          )}
           <button
-            type="button"
-            onClick={() =>
-              signIn("google", {
-                redirectTo: safeRedirectTo(searchParams.get("callbackUrl")),
-              })
-            }
-            className="rounded-lg border border-ig-border bg-surface px-3 py-2.5 text-sm font-semibold text-ig-text transition-opacity dark:border-white/10 dark:text-white"
+            type="submit"
+            disabled={pending}
+            className="mt-1.5 rounded-lg bg-ig-blue px-3 py-2 text-sm font-semibold text-white transition-opacity hover:bg-ig-blue-hover disabled:opacity-60"
           >
-            Continue with Google
+            {pending ? "Logging in…" : "Log in"}
           </button>
-        </>
-      )}
+        </form>
+        {googleEnabled && (
+          <>
+            <div className="my-4 flex items-center gap-3 text-xs font-semibold text-ig-secondary">
+              <span className="h-px flex-1 bg-ig-border" />
+              OR
+              <span className="h-px flex-1 bg-ig-border" />
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                signIn("google", {
+                  redirectTo: safeRedirectTo(searchParams.get("callbackUrl")),
+                })
+              }
+              className="flex w-full items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-ig-blue"
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-ig-border text-xs font-black"
+              >
+                G
+              </span>
+              Log in with Google
+            </button>
+          </>
+        )}
+        <div className="mt-4 text-center">
+          <a href="#" className="text-xs text-ig-secondary">
+            Forgot password?
+          </a>
+        </div>
+      </main>
+      <div className="mt-3 w-full max-w-sm border border-ig-border bg-surface px-8 py-5 text-center text-sm text-ig-text">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="font-semibold text-ig-blue">
+          Sign up
+        </Link>
+      </div>
+      <footer className="mt-6 text-center text-xs text-ig-secondary">
+        About • Help • Privacy • © 2026 DevDb MBU
+      </footer>
     </div>
   );
 }
