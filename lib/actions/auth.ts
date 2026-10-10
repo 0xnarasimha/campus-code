@@ -29,7 +29,7 @@ export async function signupAction(input: {
   name: string;
   email: string;
   password: string;
-  confirmPassword?: string;
+  confirmPassword: string;
 }): Promise<ActionResult> {
   const handle = input.handle.trim();
   const name = input.name.trim();
@@ -45,8 +45,10 @@ export async function signupAction(input: {
   if (name.length < 1 || name.length > 50) {
     return { ok: false, error: "Name must be 1-50 characters." };
   }
+  // Required: a missing field must fail the same as a mismatch (pre-DB),
+  // so omitting confirmPassword can never bypass the check.
   if (
-    typeof input.confirmPassword === "string" &&
+    typeof input.confirmPassword !== "string" ||
     password !== input.confirmPassword
   ) {
     return { ok: false, error: "Passwords do not match" };
