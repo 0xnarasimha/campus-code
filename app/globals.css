@@ -16,6 +16,14 @@
   --color-ig-subtle: #efefef;
   --color-ig-text: #262626;
   --color-ig-secondary: #737373;
+  /* Type scale: body 15px; small/meta 13px; headings +2px per tier. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.625rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
 }
 
 .dark {
@@ -43,6 +51,15 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
+  font-size: 0.9375rem;
+}
+
+/* Code/mono blocks stay compact at 12-13px. */
+code,
+pre,
+kbd,
+samp {
+  font-size: 0.8125rem;
 }
 
 .scrollbar-hide {

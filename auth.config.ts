@@ -1,5 +1,6 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import type { NextAuthConfig } from "next-auth";
 
 // Edge-safe auth configuration: NO adapter, NO database client, NO bcrypt
@@ -30,10 +31,34 @@ export interface TokenExtras {
   handle?: string;
 }
 
+export const googleClientId = process.env.GOOGLE_CLIENT_ID ?? "";
+export const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET ?? "";
+
+// Fail-soft flag: Google OAuth is only wired up when both credentials are
+// present. Login/signup pages render the "Continue with Google" button only
+// when this is true, so missing keys mean credentials-only auth with no
+// broken button. Edge-safe: reads env only, no DB/crypto imports.
+export const isGoogleEnabled =
+  Boolean(googleClientId) && Boolean(googleClientSecret);
+
 export const authConfig = {
   trustHost: true,
   session: { strategy: "jwt" },
   providers: [
+    // Spread pattern keeps the Google entry out entirely when disabled, so
+    // the edge middleware config never carries an empty-credential provider.
+    ...(isGoogleEnabled
+      ? [
+          Google({
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            // Link by verified email: a Google sign-in with the same verified
+            // email as an existing credentials account links to that user
+            // instead of erroring (OAuthAccountNotLinked).
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
     Credentials({
       id: "credentials",
       credentials: {

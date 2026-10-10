@@ -88,3 +88,26 @@ npm run db:seed
    `devdb1234` (bcrypt cost 12) and email `<handle>@mbu.edu`.
    Change or remove these accounts after testing — never use this
    password in production.
+
+## Google OAuth (optional, fail-soft)
+
+Without `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, the app is
+credentials-only and no Google button renders. To enable
+"Continue with Google":
+
+1. Open [Google Cloud console](https://console.cloud.google.com) →
+   APIs & Services → Credentials → Create Credentials → OAuth client ID
+   (type: Web application).
+2. Under Authorized redirect URIs, add:
+   - `http://localhost:3001/api/auth/callback/google` (local dev)
+   - `https://<your-production-domain>/api/auth/callback/google`
+3. Copy the client ID + secret into `.env.local` (local) and the Vercel
+   project environment (Production + Preview):
+
+```bash
+GOOGLE_CLIENT_ID="<your-client-id>"
+GOOGLE_CLIENT_SECRET="<your-client-secret>"
+```
+
+4. Redeploy / restart. A Google sign-in with the same verified email as
+   an existing credentials account links to that account.

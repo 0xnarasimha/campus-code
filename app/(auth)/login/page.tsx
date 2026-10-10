@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { signIn } from "next-auth/react";
 import { loginAction } from "@/lib/actions/auth";
 import { safeRedirectTo } from "@/lib/safe-redirect";
 
@@ -13,6 +14,18 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Fail-soft gate: the Google provider only exists server-side when
+  // GOOGLE_CLIENT_ID/SECRET are set, so ask the auth API rather than
+  // reading env (unavailable in this client component).
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((p: Record<string, unknown>) =>
+        setGoogleEnabled(Boolean(p && p.google)),
+      )
+      .catch(() => setGoogleEnabled(false));
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -81,6 +94,26 @@ function LoginForm() {
           {pending ? "Logging in…" : "Log in"}
         </button>
       </form>
+      {googleEnabled && (
+        <>
+          <div className="my-4 flex items-center gap-2 text-xs text-ig-secondary">
+            <span className="h-px flex-1 bg-ig-border dark:bg-white/10" />
+            or
+            <span className="h-px flex-1 bg-ig-border dark:bg-white/10" />
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              signIn("google", {
+                redirectTo: safeRedirectTo(searchParams.get("callbackUrl")),
+              })
+            }
+            className="rounded-lg border border-ig-border bg-surface px-3 py-2.5 text-sm font-semibold text-ig-text transition-opacity dark:border-white/10 dark:text-white"
+          >
+            Continue with Google
+          </button>
+        </>
+      )}
     </div>
   );
 }

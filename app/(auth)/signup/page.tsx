@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { signIn } from "next-auth/react";
 import { signupAction } from "@/lib/actions/auth";
 
 export default function SignupPage() {
@@ -11,15 +12,40 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Fail-soft gate: see login page — the Google provider only exists when
+  // GOOGLE_CLIENT_ID/SECRET are set server-side.
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    fetch("/api/auth/providers")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((p: Record<string, unknown>) =>
+        setGoogleEnabled(Boolean(p && p.google)),
+      )
+      .catch(() => setGoogleEnabled(false));
+  }, []);
+
+  const mismatch =
+    confirmPassword.length > 0 && password !== confirmPassword;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
     setError(null);
     setPending(true);
     try {
-      const result = await signupAction({ handle, name, email, password });
+      const result = await signupAction({
+        handle,
+        name,
+        email,
+        password,
+        confirmPassword,
+      });
       if (result.ok) {
         router.push("/");
         router.refresh();
@@ -91,6 +117,23 @@ export default function SignupPage() {
             className="rounded-lg border border-ig-border bg-surface px-3 py-2 text-sm font-normal outline-none focus:border-ig-blue dark:border-white/10"
           />
         </label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-ig-text dark:text-white">
+          Confirm password
+          <input
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="rounded-lg border border-ig-border bg-surface px-3 py-2 text-sm font-normal outline-none focus:border-ig-blue dark:border-white/10"
+          />
+        </label>
+        {mismatch && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            Passwords do not match
+          </p>
+        )}
         {error && (
           <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {error}
@@ -98,12 +141,28 @@ export default function SignupPage() {
         )}
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || mismatch}
           className="rounded-lg bg-ig-blue px-3 py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
         >
           {pending ? "Creating account…" : "Sign up"}
         </button>
       </form>
+      {googleEnabled && (
+        <>
+          <div className="my-4 flex items-center gap-2 text-xs text-ig-secondary">
+            <span className="h-px flex-1 bg-ig-border dark:bg-white/10" />
+            or
+            <span className="h-px flex-1 bg-ig-border dark:bg-white/10" />
+          </div>
+          <button
+            type="button"
+            onClick={() => signIn("google", { redirectTo: "/" })}
+            className="rounded-lg border border-ig-border bg-surface px-3 py-2.5 text-sm font-semibold text-ig-text transition-opacity dark:border-white/10 dark:text-white"
+          >
+            Continue with Google
+          </button>
+        </>
+      )}
     </div>
   );
 }
