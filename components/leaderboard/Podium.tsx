@@ -24,7 +24,7 @@ function PodiumCard({ entry, rank }: { entry: RankingEntry; rank: number }) {
   return (
     <Card className="min-w-0">
       <CardContent className="flex flex-col items-center gap-2 text-center">
-        <Badge className={cn("font-mono", badgeStyles[rank] ?? "")}>
+        <Badge className={cn("animate-float-soft font-mono", badgeStyles[rank] ?? "")}>
           #{String(rank).padStart(2, "0")}
         </Badge>
         <Avatar name={entry.name} className="h-12 w-12 text-base" />

@@ -21,7 +21,7 @@ export default function StudyPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+      <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
         <Skeleton className="h-20 w-full" />
         <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 4 }, (_, i) => (
@@ -33,7 +33,7 @@ export default function StudyPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
       <HubStories hubs={hubs} active={hub} onSelect={setHub} />
       <div className="grid gap-4 sm:grid-cols-2">
         {filtered.map((spot) => (

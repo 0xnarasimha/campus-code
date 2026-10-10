@@ -61,8 +61,9 @@ export default function SignupPage() {
 
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-sm flex-col justify-center px-4 py-8">
-      <h1 className="text-2xl font-bold text-ig-text dark:text-white">
-        Join Campus Code
+      <h1 className="font-script text-4xl leading-tight">
+        <span className="text-ig-text">Campus </span>
+        <span className="text-ig-blue">Code</span>
       </h1>
       <p className="mt-1 text-sm text-ig-secondary">
         Already have an account?{" "}
@@ -142,7 +143,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={pending || mismatch}
-          className="rounded-lg bg-ig-blue px-3 py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
+          className="rounded-lg bg-ig-blue px-3 py-2.5 text-sm font-semibold text-white transition-all duration-150 active:scale-95 disabled:opacity-60"
         >
           {pending ? "Creating account…" : "Sign up"}
         </button>
@@ -157,7 +158,7 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => signIn("google", { redirectTo: "/" })}
-            className="rounded-lg border border-ig-border bg-surface px-3 py-2.5 text-sm font-semibold text-ig-text transition-opacity dark:border-white/10 dark:text-white"
+            className="rounded-lg border border-ig-border bg-surface px-3 py-2.5 text-sm font-semibold text-ig-text transition-all duration-150 active:scale-95 dark:border-white/10 dark:text-white"
           >
             Continue with Google
           </button>

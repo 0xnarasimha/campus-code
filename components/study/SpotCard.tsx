@@ -54,7 +54,7 @@ export function SpotCard({ spot }: { spot: Spot }) {
             </h3>
             <p className="truncate text-xs text-ig-secondary">{spot.building}</p>
           </div>
-          <Badge className="shrink-0">{spot.openSeats} seats</Badge>
+          <Badge className="animate-float-soft shrink-0">{spot.openSeats} seats</Badge>
         </div>
 
         <div>

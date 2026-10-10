@@ -35,7 +35,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="animate-fade-up mx-auto w-full max-w-4xl">
       <button
         type="button"
         onClick={() => setMobileView("list")}

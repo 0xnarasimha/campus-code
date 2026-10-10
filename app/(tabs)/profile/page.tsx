@@ -29,7 +29,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6">
+      <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-6">
         <div className="flex items-center gap-5">
           <Skeleton className="h-20 w-20 rounded-full" />
           <div className="flex flex-1 justify-around">
@@ -54,7 +54,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
+    <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
       <ProfileHeader profile={profile} />
 
       <div className="flex gap-4 overflow-x-auto py-1" aria-label="Highlights">

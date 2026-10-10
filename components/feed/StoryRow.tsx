@@ -15,7 +15,7 @@ export function StoryRow() {
       aria-label="Stories"
     >
       <div className="flex w-16 shrink-0 flex-col items-center gap-1">
-        <div className="story-gradient rounded-full p-[2.5px]">
+        <div className="story-ring story-gradient rounded-full p-[2.5px]">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface text-xs font-bold text-text ring-2 ring-surface">
             All
           </div>
@@ -29,7 +29,7 @@ export function StoryRow() {
           key={s.id}
           className="flex w-16 shrink-0 flex-col items-center gap-1"
         >
-          <div className="story-gradient rounded-full p-[2.5px]">
+          <div className="story-ring story-gradient rounded-full p-[2.5px]">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface text-xs font-bold text-text ring-2 ring-surface">
               {s.avatarInitials}
             </div>

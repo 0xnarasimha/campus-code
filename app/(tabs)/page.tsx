@@ -11,7 +11,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+      <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
         <PostSkeleton />
         <PostSkeleton />
         <PostSkeleton />
@@ -20,7 +20,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
       <StoryRow />
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />

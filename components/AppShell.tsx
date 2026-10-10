@@ -25,8 +25,9 @@ function Logo() {
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-400 via-pink-600 to-indigo-600 text-sm font-bold text-white">
         M
       </span>
-      <span className="text-base font-semibold text-ig-text dark:text-white">
-        Campus Code
+      <span className="font-script text-2xl leading-none">
+        <span className="text-ig-text">Campus </span>
+        <span className="text-ig-blue">Code</span>
       </span>
     </Link>
   );

@@ -96,12 +96,14 @@ export function PostCard({ post }: { post: Post }) {
             onClick={() => setLiked((v) => !v)}
             aria-pressed={liked}
             aria-label={liked ? "Unlike" : "Like"}
-            className="flex items-center gap-1.5 text-sm text-ig-text dark:text-white"
+            className="flex items-center gap-1.5 text-sm text-ig-text transition-transform duration-150 hover:scale-105 active:scale-95 dark:text-white"
           >
             <Heart
+              key={String(liked)}
               className={cn(
                 "h-5 w-5",
-                liked ? "fill-rose-500 text-rose-500" : "text-ig-text dark:text-white"
+                liked ? "fill-rose-500 text-rose-500" : "text-ig-text dark:text-white",
+                liked && "animate-like-pop"
               )}
             />
             <span className="text-sm font-medium">{likeCount}</span>

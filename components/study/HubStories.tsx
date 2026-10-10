@@ -29,7 +29,7 @@ function Circle({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className="flex w-16 shrink-0 flex-col items-center gap-1"
+      className="story-ring flex w-16 shrink-0 flex-col items-center gap-1"
     >
       <span
         className={

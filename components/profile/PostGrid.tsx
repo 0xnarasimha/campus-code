@@ -64,7 +64,7 @@ export function PostGrid({ items }: { items: ProfileGridItem[] }) {
               aria-hidden
             >
               <span className="flex items-center gap-1 text-sm font-semibold">
-                <Heart className="h-5 w-5 fill-current" />
+                <Heart className="h-5 w-5 fill-current transition-transform duration-150 group-hover:scale-125" />
                 {likes}
               </span>
               <span className="flex items-center gap-1 text-sm font-semibold">

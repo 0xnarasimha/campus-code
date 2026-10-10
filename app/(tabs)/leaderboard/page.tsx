@@ -83,7 +83,7 @@ export default function LeaderboardPage() {
   const [query, setQuery] = useState("");
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+    <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
       <div
         role="tablist"
         aria-label="Leaderboard period"
