@@ -58,3 +58,33 @@ Node version: v24.21.0 (use Node 20+; developed and built on Node 24).
 | `/leaderboard` | Campus leaderboard  |
 | `/messages`    | Peer messages       |
 | `/profile`     | Developer profile   |
+
+## Deploy (Neon + Vercel)
+
+1. Create a [Neon](https://neon.tech) project (PostgreSQL) and copy the
+   pooled connection string.
+2. Generate the auth secret:
+
+```bash
+openssl rand -base64 32
+```
+
+3. Put both into `.env.local` (local) and the Vercel project environment
+   (Production + Preview):
+
+```bash
+DATABASE_URL="postgresql://<user>:<password>@<host>/<db>?sslmode=require"
+AUTH_SECRET="<output of openssl rand -base64 32>"
+```
+
+4. Run migrations and seed:
+
+```bash
+npx prisma migrate dev
+npm run db:seed
+```
+
+5. Seed credential note (dev-only): every seeded user has password
+   `devdb1234` (bcrypt cost 12) and email `<handle>@mbu.edu`.
+   Change or remove these accounts after testing — never use this
+   password in production.
