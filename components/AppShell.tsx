@@ -1,8 +1,9 @@
 "use client";
 
-import { Home, MapPin, Send, Trophy, User } from "lucide-react";
+import { Home, LogOut, MapPin, Send, Trophy, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -33,6 +34,8 @@ function Logo() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const handle = session?.user?.handle ?? session?.user?.name ?? null;
   const isWide =
     pathname.startsWith("/leaderboard") || pathname.startsWith("/profile");
 
@@ -64,6 +67,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        <div className="flex flex-col gap-1 border-t border-ig-border px-3 py-3 dark:border-white/10">
+          {handle && (
+            <span className="truncate px-3 text-sm font-medium text-ig-text dark:text-white">
+              @{handle}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-ig-secondary transition-colors hover:bg-ig-subtle/60 hover:text-ig-text dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            <LogOut className="h-5 w-5" />
+            Log out
+          </button>
+        </div>
         <div className="flex items-center justify-between border-t border-ig-border px-5 py-4 dark:border-white/10">
           <span className="text-xs text-ig-secondary">Theme</span>
           <ThemeToggle />
@@ -73,7 +91,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile top header */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur lg:hidden">
         <Logo />
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            type="button"
+            aria-label="Log out"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-ig-secondary transition-colors hover:bg-ig-subtle/60 hover:text-ig-text dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        </div>
       </header>
 
       {/* Main content */}
