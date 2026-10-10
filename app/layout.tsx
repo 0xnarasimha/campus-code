@@ -32,6 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          scriptProps={{ type: typeof window === "undefined" ? "text/javascript" : "text/plain" }}
         >
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
