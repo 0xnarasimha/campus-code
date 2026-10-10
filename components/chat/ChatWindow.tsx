@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Info, Send } from "lucide-react";
+import { CheckCheck, Info, Phone, Send, Video } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MeetupCard } from "@/components/chat/MeetupCard";
@@ -45,9 +45,11 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
     setDraft("");
   }
 
+  const lastOwnId = [...messages].reverse().find((m) => m.from === "me")?.id;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex shrink-0 items-center gap-3 border-b border-ig-border px-4 py-3 dark:border-white/10 md:px-5 md:py-4">
+      <header className="flex shrink-0 items-center gap-3 px-4 py-3 md:px-5 md:py-4">
         <span className="relative">
           <Avatar name={conversation.initials} className="h-12 w-12 text-base" />
           {conversation.online && (
@@ -77,6 +79,23 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
             </Link>
           </p>
         </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label="Voice call (coming soon)"
+            title="Voice call (coming soon)"
+            className="rounded-full p-2 text-ig-secondary hover:bg-ig-subtle dark:hover:bg-white/10"
+          >
+            <Phone className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Video call (coming soon)"
+            title="Video call (coming soon)"
+            className="rounded-full p-2 text-ig-secondary hover:bg-ig-subtle dark:hover:bg-white/10"
+          >
+            <Video className="h-4 w-4" />
+          </button>
         {onToggleInfo && (
           <button
             type="button"
@@ -88,16 +107,23 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
             <Info className="h-4 w-4" />
           </button>
         )}
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 md:px-5">
+        <div className="flex justify-center">
+          <span className="rounded-full bg-ig-subtle px-3 py-1 text-xs font-semibold text-ig-secondary dark:bg-white/10 dark:text-white/70">
+            Today
+          </span>
+        </div>
         {messages.map((m) => {
           const mine = m.from === "me";
           const meetupId = meetupIdOf(m.text);
           const text = meetupId ? stripMarker(m.text) : m.text;
+          const isLastOwn = mine && m.id === lastOwnId;
           return (
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-              <div className="flex max-w-[80%] flex-col gap-2">
+              <div className="flex max-w-[80%] flex-col gap-1">
                 {meetupId && <MeetupCard meetupId={meetupId} />}
                 {text && (
               <div
@@ -119,6 +145,12 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
                 </p>
               </div>
                 )}
+                {isLastOwn && (
+                  <p className="flex items-center justify-end gap-1 text-[11px] font-medium text-ig-secondary">
+                    <CheckCheck className="h-3.5 w-3.5" aria-hidden />
+                    Seen
+                  </p>
+                )}
               </div>
             </div>
           );
@@ -138,7 +170,7 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
         ))}
       </div>
 
-      <div className="flex shrink-0 items-center gap-3 border-t border-ig-border px-4 py-4 dark:border-white/10 md:px-5">
+      <div className="flex shrink-0 items-center gap-3 px-4 py-4 md:px-5">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

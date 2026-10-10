@@ -55,7 +55,7 @@ export default function ProfilePage() {
 
   return (
     <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
-      <ProfileHeader profile={profile} />
+      <ProfileHeader profile={profile} isOwn />
 
       <div className="flex gap-4 overflow-x-auto py-1" aria-label="Highlights">
         {profile.highlights.map((h, i) => (

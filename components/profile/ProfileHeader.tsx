@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { BadgeCheck, Link2, Share } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/mock-data";
 
-export function ProfileHeader({ profile }: { profile: Profile }) {
+export function ProfileHeader({
+  profile,
+  isOwn = false,
+}: {
+  profile: Profile;
+  isOwn?: boolean;
+}) {
   const [following, setFollowing] = useState(false);
   const initials = profile.name
     .split(" ")
@@ -65,33 +72,47 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
       </div>
 
       <div className="flex gap-2">
-        <button
-          type="button"
-          className="flex-1 rounded-lg bg-ig-blue px-4 py-2 text-sm font-semibold text-white"
-        >
-          Edit profile
-        </button>
-        <button
-          type="button"
-          aria-label="Share profile"
-          className="flex items-center gap-1.5 rounded-lg bg-ig-subtle px-4 py-2 text-sm font-semibold text-ig-text dark:bg-white/10 dark:text-white"
-        >
-          <Share className="h-4 w-4" />
-          Share
-        </button>
-        <button
-          type="button"
-          onClick={() => setFollowing((v) => !v)}
-          aria-pressed={following}
-          className={cn(
-            "rounded-lg px-4 py-2 text-sm font-semibold",
-            following
-              ? "bg-ig-subtle text-ig-text dark:bg-white/10 dark:text-white"
-              : "bg-ig-text text-white dark:bg-white dark:text-black"
-          )}
-        >
-          {following ? "Following" : "Follow"}
-        </button>
+        {isOwn ? (
+          <>
+            <button
+              type="button"
+              className="flex-1 rounded-lg bg-ig-blue px-4 py-2 text-sm font-semibold text-white"
+            >
+              Edit profile
+            </button>
+            <button
+              type="button"
+              aria-label="Share profile"
+              className="flex items-center gap-1.5 rounded-lg bg-ig-subtle px-4 py-2 text-sm font-semibold text-ig-text dark:bg-white/10 dark:text-white"
+            >
+              <Share className="h-4 w-4" />
+              Share
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setFollowing((v) => !v)}
+              aria-pressed={following}
+              className={cn(
+                "flex-1 rounded-lg px-4 py-2 text-sm font-semibold",
+                following
+                  ? "bg-ig-subtle text-ig-text dark:bg-white/10 dark:text-white"
+                  : "bg-ig-blue text-white"
+              )}
+            >
+              {following ? "Following" : "Follow"}
+            </button>
+            <Link
+              href="/messages"
+              aria-label={`Message ${profile.handle}`}
+              className="flex flex-1 items-center justify-center rounded-lg bg-ig-subtle px-4 py-2 text-sm font-semibold text-ig-text dark:bg-white/10 dark:text-white"
+            >
+              Message
+            </Link>
+          </>
+        )}
       </div>
     </section>
   );

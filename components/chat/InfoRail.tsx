@@ -118,12 +118,12 @@ export function InfoRail({ conversation, messages }: InfoRailProps) {
           {snippets.map((s) => (
             <div
               key={s.id}
-              className="overflow-hidden rounded-lg border border-ig-border dark:border-white/10"
+              className="overflow-hidden rounded-2xl bg-ig-subtle dark:bg-white/5"
             >
-              <p className="border-b border-ig-border px-2.5 py-1.5 text-[11px] font-medium text-ig-secondary dark:border-white/10">
+              <p className="px-2.5 py-1.5 text-[11px] font-medium text-ig-secondary">
                 {s.meta}
               </p>
-              <pre className="max-h-32 overflow-auto bg-ig-subtle p-2.5 text-ig-text dark:bg-white/5 dark:text-white">
+              <pre className="max-h-32 overflow-auto p-2.5 text-ig-text dark:text-white">
                 <code className="whitespace-pre-wrap break-words">{s.code}</code>
               </pre>
             </div>

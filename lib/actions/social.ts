@@ -60,9 +60,9 @@ export type ToggleLikeResult =
 // Idempotent like/unlike via the Like @@unique([postId, userId]) composite:
 // a second call with the same state flips it back, never double-counts.
 export async function toggleLike(postId: string): Promise<ToggleLikeResult> {
-  const userId = await currentUserId();
-  if (!userId) return { ok: false, error: "You must be logged in" };
   try {
+    const userId = await currentUserId();
+    if (!userId) return { ok: false, error: "You must be logged in" };
     const existing = await db.like.findUnique({
       where: { postId_userId: { postId, userId } },
     });
@@ -113,13 +113,13 @@ export async function addComment(
   postId: string,
   body: string
 ): Promise<AddCommentResult> {
-  const userId = await currentUserId();
-  if (!userId) return { ok: false, error: "You must be logged in" };
-  const text = body.trim();
-  if (text.length < 1 || text.length > 500) {
-    return { ok: false, error: "Comment must be 1–500 characters." };
-  }
   try {
+    const userId = await currentUserId();
+    if (!userId) return { ok: false, error: "You must be logged in" };
+    const text = body.trim();
+    if (text.length < 1 || text.length > 500) {
+      return { ok: false, error: "Comment must be 1–500 characters." };
+    }
     const comment = await db.comment.create({
       data: { postId, authorId: userId, body: text },
       include: { author: { select: { handle: true } } },
@@ -149,9 +149,9 @@ export type ToggleFollowResult =
   | Failure;
 
 export async function toggleFollow(handle: string): Promise<ToggleFollowResult> {
-  const userId = await currentUserId();
-  if (!userId) return { ok: false, error: "You must be logged in" };
   try {
+    const userId = await currentUserId();
+    if (!userId) return { ok: false, error: "You must be logged in" };
     const target = await db.user.findUnique({
       where: { handle },
       select: { id: true },
@@ -193,9 +193,9 @@ export async function toggleFollow(handle: string): Promise<ToggleFollowResult> 
 export type BumpShareResult = { ok: true; shares: number } | Failure;
 
 export async function bumpShare(postId: string): Promise<BumpShareResult> {
-  const userId = await currentUserId();
-  if (!userId) return { ok: false, error: "You must be logged in" };
   try {
+    const userId = await currentUserId();
+    if (!userId) return { ok: false, error: "You must be logged in" };
     const post = await db.post.update({
       where: { id: postId },
       data: { shares: { increment: 1 } },

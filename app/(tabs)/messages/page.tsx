@@ -124,14 +124,14 @@ export default function MessagesPage() {
         Back
       </button>
 
-      <div className="flex min-h-0 flex-1 flex-col bg-surface md:grid md:grid-cols-[300px_minmax(0,1fr)] md:divide-x md:divide-ig-border md:dark:divide-white/10 xl:grid-cols-[300px_minmax(0,1fr)_300px]">
+      <div className="flex min-h-0 flex-1 flex-col bg-surface md:grid md:grid-cols-[300px_minmax(0,1fr)] md:gap-2 md:bg-transparent xl:grid-cols-[300px_minmax(0,1fr)_300px]">
         <div
           className={cn(
             "min-h-0 flex-1 flex-col md:flex",
             mobileView === "chat" ? "hidden md:flex" : "flex"
           )}
         >
-          <div className="shrink-0 border-b border-ig-border px-4 py-3 dark:border-white/10">
+          <div className="shrink-0 px-4 py-3">
             <h1 className="text-base font-bold text-ig-text dark:text-white">Messages</h1>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto">

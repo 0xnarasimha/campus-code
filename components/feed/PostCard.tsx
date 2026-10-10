@@ -33,14 +33,20 @@ export function PostCard({ post }: { post: FeedPost }) {
     setLiked(!prevLiked);
     setLikeCount(prevCount + (prevLiked ? -1 : 1));
     setError(null);
-    const res = await toggleLike(post.id);
-    if (!res.ok) {
+    try {
+      const res = await toggleLike(post.id);
+      if (!res.ok) {
+        setLiked(prevLiked);
+        setLikeCount(prevCount);
+        setError(res.error);
+      } else {
+        setLiked(res.liked);
+        setLikeCount(res.count);
+      }
+    } catch {
       setLiked(prevLiked);
       setLikeCount(prevCount);
-      setError(res.error);
-    } else {
-      setLiked(res.liked);
-      setLikeCount(res.count);
+      setError("Something went wrong, try again");
     }
   }
 
@@ -49,17 +55,22 @@ export function PostCard({ post }: { post: FeedPost }) {
     if (!text || posting) return;
     setPosting(true);
     setError(null);
-    const res = await addComment(post.id, text);
-    setPosting(false);
-    if (!res.ok) {
-      setError(res.error);
-      return;
+    try {
+      const res = await addComment(post.id, text);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setComments((prev) => [
+        ...prev,
+        { user: res.comment.author, text: res.comment.body },
+      ]);
+      setDraft("");
+    } catch {
+      setError("Something went wrong, try again");
+    } finally {
+      setPosting(false);
     }
-    setComments((prev) => [
-      ...prev,
-      { user: res.comment.author, text: res.comment.body },
-    ]);
-    setDraft("");
   }
 
   async function onShare() {
@@ -73,12 +84,17 @@ export function PostCard({ post }: { post: FeedPost }) {
     }
     const prev = shares;
     setShares(prev + 1);
-    const res = await bumpShare(post.id);
-    if (!res.ok) {
+    try {
+      const res = await bumpShare(post.id);
+      if (!res.ok) {
+        setShares(prev);
+        setError(res.error);
+      } else {
+        setShares(res.shares);
+      }
+    } catch {
       setShares(prev);
-      setError(res.error);
-    } else {
-      setShares(res.shares);
+      setError("Something went wrong, try again");
     }
   }
 
@@ -86,12 +102,17 @@ export function PostCard({ post }: { post: FeedPost }) {
     const prev = following;
     setFollowing(!prev);
     setError(null);
-    const res = await toggleFollow(post.author);
-    if (!res.ok) {
+    try {
+      const res = await toggleFollow(post.author);
+      if (!res.ok) {
+        setFollowing(prev);
+        setError(res.error);
+      } else {
+        setFollowing(res.following);
+      }
+    } catch {
       setFollowing(prev);
-      setError(res.error);
-    } else {
-      setFollowing(res.following);
+      setError("Something went wrong, try again");
     }
   }
 

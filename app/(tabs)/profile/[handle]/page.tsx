@@ -72,7 +72,7 @@ export default async function PublicProfilePage({
 
   return (
     <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
-      <ProfileHeader profile={profile} />
+      <ProfileHeader profile={profile} isOwn={false} />
 
       <AskMeetup handle={handle} />
 

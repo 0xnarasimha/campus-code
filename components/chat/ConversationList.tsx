@@ -12,7 +12,7 @@ interface ConversationListProps {
 
 export function ConversationList({ conversations, activeId, onSelect }: ConversationListProps) {
   return (
-    <ul className="flex flex-col" role="listbox" aria-label="Conversations">
+    <ul className="flex flex-col gap-1 p-2" role="listbox" aria-label="Conversations">
       {conversations.map((c) => {
         const active = c.id === activeId;
         return (
@@ -23,7 +23,7 @@ export function ConversationList({ conversations, activeId, onSelect }: Conversa
               aria-selected={active}
               onClick={() => onSelect(c.id)}
               className={cn(
-                "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors",
+                "flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors",
                 active
                   ? "bg-ig-subtle dark:bg-white/10"
                   : "hover:bg-ig-subtle/60 dark:hover:bg-white/5"
