@@ -26,7 +26,7 @@ function Logo() {
         M
       </span>
       <span className="text-base font-semibold text-ig-text dark:text-white">
-        DevDb MBU
+        Campus Code
       </span>
     </Link>
   );

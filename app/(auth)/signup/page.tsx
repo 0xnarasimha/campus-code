@@ -62,7 +62,7 @@ export default function SignupPage() {
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-sm flex-col justify-center px-4 py-8">
       <h1 className="text-2xl font-bold text-ig-text dark:text-white">
-        Join DevDb MBU
+        Join Campus Code
       </h1>
       <p className="mt-1 text-sm text-ig-secondary">
         Already have an account?{" "}

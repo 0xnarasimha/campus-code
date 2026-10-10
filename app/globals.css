@@ -17,6 +17,7 @@
   --color-ig-text: #262626;
   --color-ig-secondary: #737373;
   /* Type scale: body 15px; small/meta 13px; headings +2px per tier. */
+  --font-script: "Grand Hotel", cursive;
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
   --text-lg: 1.25rem;
@@ -81,4 +82,29 @@ samp {
     #4f5bd5,
     #feda75
   );
+}
+
+@keyframes login-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-login-float {
+  animation: login-float 4s ease-in-out infinite;
+}
+
+.animate-login-float-delayed {
+  animation: login-float 4s ease-in-out 1.2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-login-float,
+  .animate-login-float-delayed {
+    animation: none;
+  }
 }
