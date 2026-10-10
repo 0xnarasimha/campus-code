@@ -1,30 +1,39 @@
-"use client";
-
+import { Suspense } from "react";
+import { auth } from "@/auth";
+import { getFeed } from "@/lib/feed";
 import { PostCard } from "@/components/feed/PostCard";
 import { PostSkeleton } from "@/components/feed/PostSkeleton";
 import { StoryRow } from "@/components/feed/StoryRow";
-import { posts } from "@/lib/mock-data";
-import { useSimulatedLoad } from "@/lib/use-simulated-load";
 
-export default function Home() {
-  const loading = useSimulatedLoad(800);
-
-  if (loading) {
-    return (
-      <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
-        <PostSkeleton />
-        <PostSkeleton />
-        <PostSkeleton />
-      </div>
-    );
-  }
-
+function FeedSkeleton() {
   return (
-    <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <StoryRow />
+    <>
+      <PostSkeleton />
+      <PostSkeleton />
+      <PostSkeleton />
+    </>
+  );
+}
+
+async function FeedList() {
+  const session = await auth();
+  const posts = await getFeed(session?.user?.id);
+  return (
+    <>
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}
+    </>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
+      <StoryRow />
+      <Suspense fallback={<FeedSkeleton />}>
+        <FeedList />
+      </Suspense>
     </div>
   );
 }

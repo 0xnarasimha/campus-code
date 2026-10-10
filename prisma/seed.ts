@@ -63,9 +63,14 @@ async function main() {
 
   // 2. Posts (+ likes + comments) — mock post authors predate the
   // student roster, so unknown handles fall back round-robin to students.
+  // Staggered ages (hours) keep the ranking demo varied on every reseed.
+  const SEED_AGE_HOURS = [2, 5, 26, 50];
   for (let i = 0; i < posts.length; i++) {
     const p = posts[i];
     const authorId = resolveAuthor(p.author, i);
+    const createdAt = new Date(
+      Date.now() - (SEED_AGE_HOURS[i % SEED_AGE_HOURS.length] ?? 2) * 3_600_000
+    );
     await prisma.post.upsert({
       where: { id: p.id },
       update: {
@@ -77,6 +82,7 @@ async function main() {
         codeFile: p.code?.file ?? null,
         codeLang: p.code?.lang ?? null,
         codeSnippet: p.code?.snippet ?? null,
+        createdAt,
       },
       create: {
         id: p.id,
@@ -88,6 +94,7 @@ async function main() {
         codeFile: p.code?.file ?? null,
         codeLang: p.code?.lang ?? null,
         codeSnippet: p.code?.snippet ?? null,
+        createdAt,
       },
     });
 

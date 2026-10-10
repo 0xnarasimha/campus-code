@@ -12,41 +12,102 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Post } from "@/lib/mock-data";
+import type { FeedPost } from "@/lib/feed";
+import { addComment, bumpShare, toggleFollow, toggleLike } from "@/lib/actions/social";
 
-function initialsFromHandle(handle: string) {
-  const parts = handle.split(/[._-]+/).filter(Boolean);
-  const letters = parts.map((p) => p[0]).slice(0, 2).join("");
-  return (letters || handle.slice(0, 2)).toUpperCase();
-}
-
-export function PostCard({ post }: { post: Post }) {
-  const [liked, setLiked] = useState(false);
+export function PostCard({ post }: { post: FeedPost }) {
+  const [liked, setLiked] = useState(post.liked);
+  const [likeCount, setLikeCount] = useState(post.likes);
   const [saved, setSaved] = useState(false);
   const [comments, setComments] = useState(post.comments);
   const [draft, setDraft] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [shares, setShares] = useState(post.shares);
+  const [following, setFollowing] = useState(post.authorFollowed);
+  const [error, setError] = useState<string | null>(null);
 
-  const likeCount = post.likes + (liked ? 1 : 0);
+  async function onToggleLike() {
+    const prevLiked = liked;
+    const prevCount = likeCount;
+    setLiked(!prevLiked);
+    setLikeCount(prevCount + (prevLiked ? -1 : 1));
+    setError(null);
+    const res = await toggleLike(post.id);
+    if (!res.ok) {
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+      setError(res.error);
+    } else {
+      setLiked(res.liked);
+      setLikeCount(res.count);
+    }
+  }
 
-  function addComment() {
+  async function onAddComment() {
     const text = draft.trim();
-    if (!text) return;
-    setComments((prev) => [...prev, { user: "karthik_dev", text }]);
+    if (!text || posting) return;
+    setPosting(true);
+    setError(null);
+    const res = await addComment(post.id, text);
+    setPosting(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setComments((prev) => [
+      ...prev,
+      { user: res.comment.author, text: res.comment.body },
+    ]);
     setDraft("");
+  }
+
+  async function onShare() {
+    // Copy deep link first (silent fallback), then count the share.
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/#post-${post.id}`
+      );
+    } catch {
+      // Clipboard unavailable — share still counts.
+    }
+    const prev = shares;
+    setShares(prev + 1);
+    const res = await bumpShare(post.id);
+    if (!res.ok) {
+      setShares(prev);
+      setError(res.error);
+    } else {
+      setShares(res.shares);
+    }
+  }
+
+  async function onToggleFollow() {
+    const prev = following;
+    setFollowing(!prev);
+    setError(null);
+    const res = await toggleFollow(post.author);
+    if (!res.ok) {
+      setFollowing(prev);
+      setError(res.error);
+    } else {
+      setFollowing(res.following);
+    }
   }
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3">
+      <CardContent className="flex flex-col gap-3" id={`post-${post.id}`}>
         <div className="flex items-center gap-3">
-          <Avatar name={initialsFromHandle(post.author)} />
+          <Avatar name={post.authorInitials} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1 text-sm font-semibold text-ig-text dark:text-white">
               <span className="truncate">@{post.author}</span>
-              <BadgeCheck
-                className="h-4 w-4 shrink-0 text-ig-blue"
-                aria-label="Verified"
-              />
+              {post.verified && (
+                <BadgeCheck
+                  className="h-4 w-4 shrink-0 text-ig-blue"
+                  aria-label="Verified"
+                />
+              )}
               <span className="shrink-0 font-normal text-ig-secondary">
                 · {post.time}
               </span>
@@ -56,6 +117,19 @@ export function PostCard({ post }: { post: Post }) {
               <span className="truncate">{post.location}</span>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={onToggleFollow}
+            aria-pressed={following}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1 text-xs font-semibold",
+              following
+                ? "bg-ig-subtle text-ig-secondary dark:bg-white/10 dark:text-white/70"
+                : "bg-ig-blue text-white"
+            )}
+          >
+            {following ? "Following" : "Follow"}
+          </button>
         </div>
 
         <div>
@@ -93,7 +167,7 @@ export function PostCard({ post }: { post: Post }) {
         <div className="flex items-center gap-4 pt-1">
           <button
             type="button"
-            onClick={() => setLiked((v) => !v)}
+            onClick={onToggleLike}
             aria-pressed={liked}
             aria-label={liked ? "Unlike" : "Like"}
             className="flex items-center gap-1.5 text-sm text-ig-text transition-transform duration-150 hover:scale-105 active:scale-95 dark:text-white"
@@ -117,10 +191,14 @@ export function PostCard({ post }: { post: Post }) {
           </button>
           <button
             type="button"
+            onClick={onShare}
             aria-label="Share"
-            className="flex items-center text-ig-text dark:text-white"
+            className="flex items-center gap-1.5 text-ig-text dark:text-white"
           >
             <Send className="h-5 w-5" />
+            {shares > 0 && (
+              <span className="text-sm font-medium">{shares}</span>
+            )}
           </button>
           <button
             type="button"
@@ -135,17 +213,25 @@ export function PostCard({ post }: { post: Post }) {
           </button>
         </div>
 
-        <p className="text-xs text-ig-secondary">
-          Liked by <span className="font-semibold">{post.likedBy[0]}</span>
-          {likeCount > 1 && (
-            <>
-              {" "}and{" "}
-              <span className="font-semibold">
-                {(likeCount - 1).toLocaleString()} others
-              </span>
-            </>
-          )}
-        </p>
+        {post.likedBy.length > 0 && (
+          <p className="text-xs text-ig-secondary">
+            Liked by <span className="font-semibold">{post.likedBy[0]}</span>
+            {likeCount > 1 && (
+              <>
+                {" "}and{" "}
+                <span className="font-semibold">
+                  {(likeCount - 1).toLocaleString()} others
+                </span>
+              </>
+            )}
+          </p>
+        )}
+
+        {error && (
+          <p role="alert" className="text-xs text-rose-500">
+            {error}
+          </p>
+        )}
 
         <ul className="flex flex-col gap-1">
           {comments.map((c, i) => (
@@ -163,7 +249,7 @@ export function PostCard({ post }: { post: Post }) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") addComment();
+              if (e.key === "Enter") void onAddComment();
             }}
             placeholder="Add a comment..."
             aria-label="Add a comment"
@@ -171,8 +257,8 @@ export function PostCard({ post }: { post: Post }) {
           />
           <button
             type="button"
-            onClick={addComment}
-            disabled={!draft.trim()}
+            onClick={() => void onAddComment()}
+            disabled={!draft.trim() || posting}
             className="text-sm font-semibold text-ig-blue disabled:opacity-40"
           >
             Post

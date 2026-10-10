@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Post" ADD COLUMN     "shares" INTEGER NOT NULL DEFAULT 0;
