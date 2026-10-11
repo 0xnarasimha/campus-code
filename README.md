@@ -111,3 +111,28 @@ GOOGLE_CLIENT_SECRET="<your-client-secret>"
 
 4. Redeploy / restart. A Google sign-in with the same verified email as
    an existing credentials account links to that account.
+
+## Admin login (separate from user accounts)
+
+`/admin/login` is a standalone page (not the app shell) backed by
+`lib/admin-auth.ts`: env credentials (`ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH`,
+bcrypt cost 12) and a jose-signed HS256 cookie (`cc_admin`, 12h,
+http-only, lax, prod-only secure). The signing key is the existing
+`AUTH_SECRET` (documented reuse — no second secret). No `User.role`,
+no new tables. `middleware.ts` redirects unauthenticated `/admin/*`
+(except `/admin/login`) to `/admin/login`, and sends an already-authed
+admin visiting `/admin/login` to `/admin`.
+
+Set the two lines in `.env.local` (controller sets these with the user —
+never commit real secrets):
+
+```bash
+ADMIN_EMAIL="<admin-email>"
+ADMIN_PASSWORD_HASH="<output of the hash command below>"
+```
+
+Generate the hash with this exact verified command:
+
+```bash
+npx tsx -e "import bcrypt from 'bcryptjs'; bcrypt.hash(process.argv[1], 12).then((h) => console.log(h));" "<admin-password>"
+```
