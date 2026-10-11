@@ -312,22 +312,22 @@ function ClubCard({
 }) {
   return (
     <Card className="min-w-0 overflow-hidden">
-      <CardContent className="flex flex-col gap-3">
-        <div className="flex min-w-0 items-start gap-3">
+      <CardContent className="flex min-h-[240px] flex-col gap-4 p-6">
+        <div className="flex min-w-0 items-start gap-4">
           <span
             aria-hidden="true"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ig-blue/10 text-base font-bold text-ig-blue dark:bg-ig-blue/20"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ig-blue/10 text-lg font-bold text-ig-blue dark:bg-ig-blue/20"
           >
             {club.name.charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-sm font-semibold text-ig-text dark:text-white">
+            <h3 className="break-words text-lg font-bold leading-snug text-ig-text dark:text-white">
               {club.name}
             </h3>
-            <p className="line-clamp-2 text-xs text-ig-secondary">
+            <p className="mt-1 line-clamp-2 text-sm text-ig-secondary">
               {club.description || "No description yet."}
             </p>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
               <Badge className="gap-1">
                 <Users className="h-3 w-3" />
                 {club.memberCount} member{club.memberCount === 1 ? "" : "s"}
@@ -339,11 +339,11 @@ function ClubCard({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="mt-auto flex gap-2">
           <Button
             variant="secondary"
             size="sm"
-            className="flex-1"
+            className="w-full flex-1"
             aria-expanded={expanded}
             onClick={onToggleExpand}
           >
@@ -352,7 +352,7 @@ function ClubCard({
               className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")}
             />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onAddEvent} aria-label={`Add event to ${club.name}`}>
+          <Button variant="ghost" size="sm" className="w-full flex-1" onClick={onAddEvent} aria-label={`Add event to ${club.name}`}>
             <Plus className="h-4 w-4" />
             Add event
           </Button>
@@ -428,7 +428,7 @@ export function ClubsTab() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton key={i} className="h-48 w-full" />
+            <Skeleton key={i} className="h-60 w-full" />
           ))}
         </div>
       </div>
