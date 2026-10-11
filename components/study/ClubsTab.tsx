@@ -169,13 +169,20 @@ function AddEventModal({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const parsedDate = new Date(date);
+  const dateValid = date.trim() !== "" && !Number.isNaN(parsedDate.getTime());
+
   async function onSubmit() {
+    if (!dateValid) {
+      setError("Pick a valid event date.");
+      return;
+    }
     setError(null);
     setSaving(true);
     const res = await createEvent({
       clubId: club.id,
       title,
-      dateISO: new Date(date).toISOString(),
+      dateISO: parsedDate.toISOString(),
       venue,
     });
     setSaving(false);
@@ -233,7 +240,11 @@ function AddEventModal({
           {error}
         </p>
       )}
-      <Button onClick={() => void onSubmit()} disabled={saving} className="w-full">
+      <Button
+        onClick={() => void onSubmit()}
+        disabled={saving || !dateValid}
+        className="w-full"
+      >
         {saving ? "Creating…" : "Create event"}
       </Button>
     </ModalShell>
