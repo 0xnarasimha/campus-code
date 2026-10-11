@@ -1,13 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { spots, type Spot } from "@/lib/mock-data";
-
-const events = [
-  { id: "e1", title: "Library Closure", detail: "Oct 12 · Central Library" },
-  { id: "e2", title: "Hackathon @ CSE Block", detail: "CSE Block B · Lab 4" },
-  { id: "e3", title: "Library Closure", detail: "Oct 13 · Central Library" },
-];
+import { getUpcomingEvents, type UpcomingEvent } from "@/lib/actions/clubs";
 
 const peakHours = ["Peak 6–9 PM", "Peak 4–8 PM", "Peak 7–10 PM"];
 
@@ -65,6 +64,26 @@ export function ActivityRail() {
   const popular = [...active]
     .sort((a, b) => b.occupancy - a.occupancy)
     .slice(0, 3);
+  const [events, setEvents] = useState<UpcomingEvent[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const upcoming = await getUpcomingEvents();
+      if (!cancelled) setEvents(upcoming.slice(0, 5));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function eventDetail(event: UpcomingEvent): string {
+    const d = event.date instanceof Date ? event.date : new Date(event.date);
+    const when = Number.isNaN(d.getTime())
+      ? ""
+      : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return [when, event.venue || event.clubName].filter(Boolean).join(" · ");
+  }
 
   return (
     <div className="animate-fade-up flex flex-col gap-4">
@@ -148,24 +167,34 @@ export function ActivityRail() {
           <h2 className="text-sm font-semibold text-ig-text dark:text-white">
             Upcoming Events
           </h2>
-          <ul className="flex flex-col gap-2.5">
-            {events.map((event) => (
-              <li key={event.id} className="flex items-start gap-2.5">
-                <span
-                  aria-hidden="true"
-                  className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-ig-blue"
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-ig-text dark:text-white">
-                    {event.title}
-                  </p>
-                  <p className="truncate text-xs text-ig-secondary">
-                    {event.detail}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {events === null ? (
+            <div className="flex flex-col gap-2.5" aria-label="Loading upcoming events">
+              {Array.from({ length: 3 }, (_, i) => (
+                <Skeleton key={i} className="h-9 w-full" />
+              ))}
+            </div>
+          ) : events.length === 0 ? (
+            <p className="text-xs text-ig-secondary">No upcoming events.</p>
+          ) : (
+            <ul className="flex flex-col gap-2.5">
+              {events.map((event) => (
+                <li key={event.id} className="flex items-start gap-2.5">
+                  <span
+                    aria-hidden="true"
+                    className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-ig-blue"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ig-text dark:text-white">
+                      {event.title}
+                    </p>
+                    <p className="truncate text-xs text-ig-secondary">
+                      {eventDetail(event)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
     </div>
