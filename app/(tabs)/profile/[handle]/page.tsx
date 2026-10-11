@@ -55,6 +55,8 @@ export default async function PublicProfilePage({
     handle: user.handle,
     name: user.name,
     bio: user.bio,
+    year: user.year,
+    branch: user.branch,
     stats: {
       posts: user._count.posts,
       followers: user._count.followers,

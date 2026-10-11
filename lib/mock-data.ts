@@ -526,6 +526,8 @@ export interface Profile {
   handle: string;
   name: string;
   bio: string;
+  year?: string;
+  branch?: string;
   stats: ProfileStats;
   highlights: string[];
   grid: ProfileGridItem[];

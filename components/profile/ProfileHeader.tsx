@@ -10,9 +10,11 @@ import type { Profile } from "@/lib/mock-data";
 export function ProfileHeader({
   profile,
   isOwn = false,
+  onEdit,
 }: {
   profile: Profile;
   isOwn?: boolean;
+  onEdit?: () => void;
 }) {
   const [following, setFollowing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,8 @@ export function ProfileHeader({
     { label: "following", value: profile.stats.following },
   ];
 
+  const metaLine = [profile.year, profile.branch].filter(Boolean).join(" · ");
+
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center gap-5">
@@ -77,7 +81,8 @@ export function ProfileHeader({
           <BadgeCheck className="h-4 w-4 text-ig-blue" aria-label="Verified" />
         </div>
         <p className="text-sm font-medium text-ig-text dark:text-white">
-          {profile.name} · CSE &apos;26
+          {profile.name}
+          {metaLine ? ` · ${metaLine}` : ""}
         </p>
         <p className="mt-1 text-sm text-ig-text dark:text-white/90">{profile.bio}</p>
         <a
@@ -96,6 +101,7 @@ export function ProfileHeader({
           <>
             <button
               type="button"
+              onClick={onEdit}
               className="flex-1 rounded-lg bg-ig-blue px-4 py-2 text-sm font-semibold text-white"
             >
               Edit profile
