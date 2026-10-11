@@ -14,7 +14,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { FeedPost } from "@/lib/feed";
-import { addComment, bumpShare, toggleFollow, toggleLike } from "@/lib/actions/social";
+import { addComment, bumpShare, toggleLike } from "@/lib/actions/social";
+import { FOLLOW_LABEL, useFollowToggle } from "@/components/social/use-follow";
 
 export function PostCard({ post }: { post: FeedPost }) {
   const [liked, setLiked] = useState(post.liked);
@@ -24,8 +25,14 @@ export function PostCard({ post }: { post: FeedPost }) {
   const [draft, setDraft] = useState("");
   const [posting, setPosting] = useState(false);
   const [shares, setShares] = useState(post.shares);
-  const [following, setFollowing] = useState(post.authorFollowed);
+  const {
+    state: followState,
+    error: followError,
+    busy: followBusy,
+    toggle: onToggleFollow,
+  } = useFollowToggle(post.author, post.authorFollowed ? "accepted" : "none");
   const [error, setError] = useState<string | null>(null);
+  const followFailed = followError ?? error;
 
   async function onToggleLike() {
     const prevLiked = liked;
@@ -98,24 +105,6 @@ export function PostCard({ post }: { post: FeedPost }) {
     }
   }
 
-  async function onToggleFollow() {
-    const prev = following;
-    setFollowing(!prev);
-    setError(null);
-    try {
-      const res = await toggleFollow(post.author);
-      if (!res.ok) {
-        setFollowing(prev);
-        setError(res.error);
-      } else {
-        setFollowing(res.following);
-      }
-    } catch {
-      setFollowing(prev);
-      setError("Something went wrong, try again");
-    }
-  }
-
   return (
     <Card>
       <CardContent className="flex flex-col gap-3" id={`post-${post.id}`}>
@@ -146,16 +135,17 @@ export function PostCard({ post }: { post: FeedPost }) {
           </div>
           <button
             type="button"
-            onClick={onToggleFollow}
-            aria-pressed={following}
+            onClick={() => void onToggleFollow()}
+            disabled={followBusy}
+            aria-pressed={followState !== "none"}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1 text-xs font-semibold",
-              following
+              "shrink-0 rounded-full px-3 py-1 text-xs font-semibold disabled:opacity-60",
+              followState !== "none"
                 ? "bg-ig-subtle text-ig-secondary dark:bg-white/10 dark:text-white/70"
                 : "bg-ig-blue text-white"
             )}
           >
-            {following ? "Following" : "Follow"}
+            {FOLLOW_LABEL[followState]}
           </button>
         </div>
 
@@ -254,9 +244,9 @@ export function PostCard({ post }: { post: FeedPost }) {
           </p>
         )}
 
-        {error && (
+        {followFailed && (
           <p role="alert" className="text-xs text-rose-500">
-            {error}
+            {followFailed}
           </p>
         )}
 

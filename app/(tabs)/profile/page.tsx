@@ -19,7 +19,7 @@ export default async function ProfilePage() {  const session = await auth();
   const user = await db.user.findUnique({
     where: { id: userId },
     include: {
-      _count: { select: { posts: true, followers: true, following: true } },
+      _count: { select: { posts: true } },
       posts: {
         orderBy: { createdAt: "desc" },
         take: 12,
@@ -36,6 +36,23 @@ export default async function ProfilePage() {  const session = await auth();
 
   // Session valid but user row gone (deleted): force a fresh login.
   if (!user) redirect("/login?callbackUrl=%2Fprofile");
+
+  // Follower/following counts are accepted follows only — pending requests
+  // in either direction don't count. Incoming pending requests feed the
+  // Follow requests section below.
+  const [followers, following, pending] = await Promise.all([
+    db.follow.count({ where: { followingId: user.id, status: "accepted" } }),
+    db.follow.count({ where: { followerId: user.id, status: "accepted" } }),
+    db.follow.findMany({
+      where: { followingId: user.id, status: "pending" },
+      orderBy: { followerId: "asc" },
+      include: {
+        follower: {
+          select: { handle: true, name: true, avatarInitials: true },
+        },
+      },
+    }),
+  ]);
 
   const tagCounts = new Map<string, number>();
   for (const p of user.posts) {
@@ -54,8 +71,8 @@ export default async function ProfilePage() {  const session = await auth();
     branch: user.branch,
     stats: {
       posts: user._count.posts,
-      followers: user._count.followers,
-      following: user._count.following,
+      followers,
+      following,
     },
     highlights: highlights.length > 0 ? highlights : ["Posts"],
     grid: user.posts.map((p) => ({
@@ -77,6 +94,11 @@ export default async function ProfilePage() {  const session = await auth();
         year: user.year,
         branch: user.branch,
       }}
+      requests={pending.map((p) => ({
+        handle: p.follower.handle,
+        name: p.follower.name,
+        initials: p.follower.avatarInitials,
+      }))}
     />
   );
 }

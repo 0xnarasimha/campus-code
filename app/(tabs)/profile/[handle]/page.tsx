@@ -25,7 +25,7 @@ export default async function PublicProfilePage({
   const user = await db.user.findUnique({
     where: { handle },
     include: {
-      _count: { select: { posts: true, followers: true, following: true } },
+      _count: { select: { posts: true } },
       posts: {
         orderBy: { createdAt: "desc" },
         take: 12,
@@ -41,6 +41,32 @@ export default async function PublicProfilePage({
   });
 
   if (!user) notFound();
+
+  // Accepted-only counts (pending requests don't inflate them) plus the
+  // viewer's own row for the Follow/Requested/Following button state.
+  // Posts and grid stay public — no read-path gating for private accounts.
+  const viewerId = session?.user?.id ?? null;
+  const [followers, following, myRow] = await Promise.all([
+    db.follow.count({ where: { followingId: user.id, status: "accepted" } }),
+    db.follow.count({ where: { followerId: user.id, status: "accepted" } }),
+    viewerId
+      ? db.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: viewerId,
+              followingId: user.id,
+            },
+          },
+          select: { status: true },
+        })
+      : Promise.resolve(null),
+  ]);
+  const initialFollow =
+    myRow?.status === "accepted"
+      ? ("accepted" as const)
+      : myRow?.status === "pending"
+        ? ("pending" as const)
+        : ("none" as const);
 
   const tagCounts = new Map<string, number>();
   for (const p of user.posts) {
@@ -59,8 +85,8 @@ export default async function PublicProfilePage({
     branch: user.branch,
     stats: {
       posts: user._count.posts,
-      followers: user._count.followers,
-      following: user._count.following,
+      followers,
+      following,
     },
     highlights: highlights.length > 0 ? highlights : ["Posts"],
     grid: user.posts.map((p) => ({
@@ -74,7 +100,12 @@ export default async function PublicProfilePage({
 
   return (
     <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
-      <ProfileHeader profile={profile} isOwn={false} />
+      <ProfileHeader
+        profile={profile}
+        isOwn={false}
+        initialFollow={initialFollow}
+        isPrivate={user.isPrivate}
+      />
 
       <AskMeetup handle={handle} />
 

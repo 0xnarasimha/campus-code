@@ -1,41 +1,31 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { BadgeCheck, Link2, Share } from "lucide-react";
+import { BadgeCheck, Link2, Lock, Share } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toggleFollow } from "@/lib/actions/social";
+import type { FollowState } from "@/lib/actions/social";
+import { FOLLOW_LABEL, useFollowToggle } from "@/components/social/use-follow";
 import type { Profile } from "@/lib/mock-data";
 
 export function ProfileHeader({
   profile,
   isOwn = false,
   onEdit,
+  initialFollow = "none",
+  isPrivate = false,
 }: {
   profile: Profile;
   isOwn?: boolean;
   onEdit?: () => void;
+  initialFollow?: FollowState;
+  isPrivate?: boolean;
 }) {
-  const [following, setFollowing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function onToggleFollow() {
-    const prev = following;
-    setFollowing(!prev);
-    setError(null);
-    try {
-      const res = await toggleFollow(profile.handle);
-      if (!res.ok) {
-        setFollowing(prev);
-        setError(res.error);
-      } else {
-        setFollowing(res.following);
-      }
-    } catch {
-      setFollowing(prev);
-      setError("Something went wrong, try again");
-    }
-  }
+  const { state, error, busy, toggle } = useFollowToggle(
+    profile.handle,
+    initialFollow
+  );
+  const followersDelta =
+    (state === "accepted" ? 1 : 0) - (initialFollow === "accepted" ? 1 : 0);
   const initials = profile.name
     .split(" ")
     .map((p) => p[0])
@@ -45,7 +35,7 @@ export function ProfileHeader({
 
   const stats: Array<{ label: string; value: number }> = [
     { label: "posts", value: profile.stats.posts },
-    { label: "followers", value: profile.stats.followers + (following ? 1 : 0) },
+    { label: "followers", value: profile.stats.followers + followersDelta },
     { label: "following", value: profile.stats.following },
   ];
 
@@ -78,6 +68,12 @@ export function ProfileHeader({
       <div>
         <div className="flex items-center gap-1.5 text-sm font-semibold text-ig-text dark:text-white">
           <span>@{profile.handle}</span>
+          {isPrivate && !isOwn && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-ig-subtle px-2 py-0.5 text-[11px] font-medium text-ig-secondary dark:bg-white/10 dark:text-white/70">
+              <Lock className="h-3 w-3" aria-hidden />
+              Private
+            </span>
+          )}
           <BadgeCheck className="h-4 w-4 text-ig-blue" aria-label="Verified" />
         </div>
         <p className="text-sm font-medium text-ig-text dark:text-white">
@@ -119,16 +115,17 @@ export function ProfileHeader({
           <>
             <button
               type="button"
-              onClick={() => void onToggleFollow()}
-              aria-pressed={following}
+              onClick={() => void toggle()}
+              disabled={busy}
+              aria-pressed={state !== "none"}
               className={cn(
-                "flex-1 rounded-lg px-4 py-2 text-sm font-semibold",
-                following
+                "flex-1 rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-60",
+                state !== "none"
                   ? "bg-ig-subtle text-ig-text dark:bg-white/10 dark:text-white"
                   : "bg-ig-blue text-white"
               )}
             >
-              {following ? "Following" : "Follow"}
+              {busy ? "…" : FOLLOW_LABEL[state]}
             </button>
             <Link
               href="/messages"

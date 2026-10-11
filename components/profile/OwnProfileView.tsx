@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { PostGrid } from "@/components/profile/PostGrid";
+import {
+  FollowRequests,
+  type FollowRequest,
+} from "@/components/profile/FollowRequests";
 import { EditProfileModal, type EditProfileInitial } from "@/components/profile/EditProfileModal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,9 +28,11 @@ function itemsForTab(tab: Tab, grid: Profile["grid"]) {
 export function OwnProfileView({
   profile,
   initial,
+  requests = [],
 }: {
   profile: Profile;
   initial: EditProfileInitial;
+  requests?: FollowRequest[];
 }) {
   const [tab, setTab] = useState<Tab>("Posts");
   const [editing, setEditing] = useState(false);
@@ -34,6 +40,8 @@ export function OwnProfileView({
   return (
     <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
       <ProfileHeader profile={profile} isOwn onEdit={() => setEditing(true)} />
+
+      <FollowRequests initial={requests} />
 
       {!profile.bio && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-ig-border bg-ig-subtle px-4 py-3 dark:border-white/10 dark:bg-white/5">

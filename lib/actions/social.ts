@@ -144,17 +144,31 @@ export async function addComment(
   }
 }
 
+export type FollowState = "none" | "pending" | "accepted";
+
 export type ToggleFollowResult =
-  | { ok: true; following: boolean; followers: number }
+  | {
+      ok: true;
+      following: boolean;
+      requested: boolean;
+      followers: number;
+    }
   | Failure;
 
-export async function toggleFollow(handle: string): Promise<ToggleFollowResult> {
+// Private-by-default follow: tapping Follow on a private account creates a
+// pending request (second tap cancels it); public accounts follow at once.
+// `following` means an accepted follow; `requested` means pending.
+// `followers` counts accepted follows only. Core takes an explicit userId
+// so probes can exercise it without a session (same pattern as
+// updateProfileCore); the exported wrapper resolves the session.
+export async function toggleFollowCore(
+  userId: string,
+  handle: string
+): Promise<ToggleFollowResult> {
   try {
-    const userId = await currentUserId();
-    if (!userId) return { ok: false, error: "You must be logged in" };
     const target = await db.user.findUnique({
       where: { handle },
-      select: { id: true },
+      select: { id: true, isPrivate: true },
     });
     if (!target) return { ok: false, error: "User not found" };
     if (target.id === userId)
@@ -165,7 +179,10 @@ export async function toggleFollow(handle: string): Promise<ToggleFollowResult> 
       },
     });
     let following: boolean;
+    let requested: boolean;
     if (existing) {
+      // Accepted or pending alike: tap again removes it (unfollow / cancel
+      // request). The composite unique keeps this idempotent.
       await db.follow.delete({
         where: {
           followerId_followingId: {
@@ -175,18 +192,152 @@ export async function toggleFollow(handle: string): Promise<ToggleFollowResult> 
         },
       });
       following = false;
+      requested = false;
+    } else if (target.isPrivate) {
+      await db.follow.create({
+        data: { followerId: userId, followingId: target.id, status: "pending" },
+      });
+      following = false;
+      requested = true;
     } else {
       await db.follow.create({
-        data: { followerId: userId, followingId: target.id },
+        data: { followerId: userId, followingId: target.id, status: "accepted" },
       });
       following = true;
+      requested = false;
     }
     const followers = await db.follow.count({
-      where: { followingId: target.id },
+      where: { followingId: target.id, status: "accepted" },
     });
-    return { ok: true, following, followers };
+    return { ok: true, following, requested, followers };
   } catch (err) {
     return dbError(err, "toggleFollow");
+  }
+}
+
+export async function toggleFollow(
+  handle: string
+): Promise<ToggleFollowResult> {
+  const userId = await currentUserId();
+  if (!userId) return { ok: false, error: "You must be logged in" };
+  return toggleFollowCore(userId, handle);
+}
+
+export type RespondFollowResult =
+  | { ok: true; accepted: boolean; followers: number }
+  | Failure;
+
+// Recipient-only: accept (row → accepted) or decline (row deleted) an
+// incoming pending request identified by the requester's handle.
+export async function respondFollowCore(
+  userId: string,
+  requesterHandle: string,
+  accept: boolean
+): Promise<RespondFollowResult> {
+  try {
+    const requester = await db.user.findUnique({
+      where: { handle: requesterHandle },
+      select: { id: true },
+    });
+    if (!requester) return { ok: false, error: "User not found" };
+    const pending = await db.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: requester.id,
+          followingId: userId,
+        },
+      },
+    });
+    if (!pending || pending.status !== "pending")
+      return { ok: false, error: "Request not found" };
+    if (accept) {
+      await db.follow.update({
+        where: {
+          followerId_followingId: {
+            followerId: requester.id,
+            followingId: userId,
+          },
+        },
+        data: { status: "accepted" },
+      });
+    } else {
+      await db.follow.delete({
+        where: {
+          followerId_followingId: {
+            followerId: requester.id,
+            followingId: userId,
+          },
+        },
+      });
+    }
+    const followers = await db.follow.count({
+      where: { followingId: userId, status: "accepted" },
+    });
+    return { ok: true, accepted: accept, followers };
+  } catch (err) {
+    return dbError(err, "respondFollow");
+  }
+}
+
+export async function respondFollow({
+  handle,
+  accept,
+}: {
+  handle: string;
+  accept: boolean;
+}): Promise<RespondFollowResult> {
+  const userId = await currentUserId();
+  if (!userId) return { ok: false, error: "You must be logged in" };
+  return respondFollowCore(userId, handle, accept);
+}
+
+export type FollowInfo = { state: FollowState; isPrivate: boolean };
+
+// Batch lookup for follow buttons (leaderboard rows, feed cards): one query
+// for privacy flags plus one for my rows with these handles. Anonymous
+// callers get real isPrivate flags with state "none".
+export async function getFollowInfo(
+  handles: string[]
+): Promise<Record<string, FollowInfo>> {
+  const result: Record<string, FollowInfo> = {};
+  const unique = [...new Set(handles.map((h) => h.trim()).filter(Boolean))].slice(
+    0,
+    50
+  );
+  if (unique.length === 0) return result;
+  try {
+    const userId = await currentUserId();
+    const users = await db.user.findMany({
+      where: { handle: { in: unique } },
+      select: { id: true, handle: true, isPrivate: true },
+    });
+    for (const u of users) result[u.handle] = { state: "none", isPrivate: u.isPrivate };
+    if (userId) {
+      const rows = await db.follow.findMany({
+        where: {
+          followerId: userId,
+          followingId: { in: users.map((u) => u.id) },
+        },
+        select: { followingId: true, status: true },
+      });
+      const stateById = new Map(rows.map((r) => [r.followingId, r.status]));
+      for (const u of users) {
+        const status = stateById.get(u.id);
+        result[u.handle] = {
+          state:
+            status === "accepted"
+              ? "accepted"
+              : status === "pending"
+                ? "pending"
+                : "none",
+          isPrivate: u.isPrivate,
+        };
+      }
+    }
+    return result;
+  } catch (err) {
+    console.error("getFollowInfo failed:", err);
+    return result;
   }
 }
 

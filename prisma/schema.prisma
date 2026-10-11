@@ -17,6 +17,7 @@ model User {
   branch         String
   avatarInitials String
   verified       Boolean  @default(false)
+  isPrivate      Boolean  @default(true)
   bio            String   @default("")
   points         Int      @default(0)
   lcSolved       Int      @default(0)
@@ -118,6 +119,7 @@ model Follow {
   follower    User   @relation("follows", fields: [followerId], references: [id], onDelete: Cascade)
   followingId String
   following   User   @relation("followedBy", fields: [followingId], references: [id], onDelete: Cascade)
+  status      String @default("pending")
 
   @@unique([followerId, followingId])
 }

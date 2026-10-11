@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Podium } from "@/components/leaderboard/Podium";
 import { RankingRow } from "@/components/leaderboard/RankingRow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { getFollowInfo, type FollowInfo } from "@/lib/actions/social";
 import {
   rankingsAllTime,
   rankingsMonthly,
@@ -42,6 +43,27 @@ function LeaderboardBody({ period, query }: { period: Period; query: string }) {
     );
   }, [data, query]);
 
+  // Real follow state + privacy per visible handle (leaderboard rows are
+  // otherwise mock data). `follows` only exposes info for the current
+  // filter — anything else reads as not-yet-loaded, so buttons never flash
+  // a wrong Follow/Following label. Async callbacks (not the effect body)
+  // set state, per the set-state-in-effect rule.
+  const [cached, setCached] = useState<{
+    key: string;
+    info: Record<string, FollowInfo>;
+  } | null>(null);
+  const filterKey = `${period}:${query}`;
+  useEffect(() => {
+    let cancelled = false;
+    void getFollowInfo(filtered.map((e) => e.handle)).then((info) => {
+      if (!cancelled) setCached({ key: filterKey, info });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [filtered, filterKey]);
+  const follows = cached?.key === filterKey ? cached.info : null;
+
   if (loading) {
     return (
       <div className="flex flex-col gap-3">
@@ -70,9 +92,14 @@ function LeaderboardBody({ period, query }: { period: Period; query: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Podium top3={top3} />
+      <Podium top3={top3} follows={follows ?? undefined} />
       {rest.map((entry) => (
-        <RankingRow key={entry.handle} entry={entry} rank={entry.rank} />
+        <RankingRow
+          key={entry.handle}
+          entry={entry}
+          rank={entry.rank}
+          follow={follows?.[entry.handle]}
+        />
       ))}
     </div>
   );

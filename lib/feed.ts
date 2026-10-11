@@ -67,7 +67,8 @@ export async function getFeed(userId?: string): Promise<FeedPost[]> {
     userId
       ? db.follow
           .findMany({
-            where: { followerId: userId },
+            // Pending requests don't count: only accepted follows boost.
+            where: { followerId: userId, status: "accepted" },
             select: { followingId: true },
           })
           .then((rows) => new Set(rows.map((r) => r.followingId)))

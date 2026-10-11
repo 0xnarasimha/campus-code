@@ -1,15 +1,31 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { FollowInfo } from "@/lib/actions/social";
+import {
+  FOLLOW_LABEL,
+  useFollowToggle,
+} from "@/components/social/use-follow";
 import { students, type RankingRow as RankingEntry } from "@/lib/mock-data";
 
-export function RankingRow({ entry, rank }: { entry: RankingEntry; rank: number }) {
-  const [following, setFollowing] = useState(false);
+export function RankingRow({
+  entry,
+  rank,
+  follow,
+}: {
+  entry: RankingEntry;
+  rank: number;
+  follow?: FollowInfo;
+}) {
+  const { state, busy, toggle } = useFollowToggle(
+    entry.handle,
+    follow?.state ?? "none"
+  );
   const stacks = students.find((s) => s.handle === entry.handle)?.stacks ?? [];
   const positive = entry.delta > 0;
   const flat = entry.delta === 0;
@@ -31,6 +47,12 @@ export function RankingRow({ entry, rank }: { entry: RankingEntry; rank: number 
           >
             @{entry.handle}
           </Link>
+          {follow?.isPrivate && (
+            <Lock
+              className="ml-1 inline h-3 w-3 text-ig-secondary"
+              aria-label="Private profile"
+            />
+          )}
         </p>
         <div className="mt-1 flex flex-wrap gap-1">
           {stacks.map((stack) => (
@@ -56,13 +78,14 @@ export function RankingRow({ entry, rank }: { entry: RankingEntry; rank: number 
         </span>
       </div>
       <Button
-        variant={following ? "secondary" : "primary"}
+        variant={state !== "none" ? "secondary" : "primary"}
         size="sm"
         className="shrink-0"
-        aria-pressed={following}
-        onClick={() => setFollowing((v) => !v)}
+        aria-pressed={state !== "none"}
+        disabled={busy || !follow}
+        onClick={() => void toggle()}
       >
-        {following ? "Following" : "Follow"}
+        {FOLLOW_LABEL[state]}
       </Button>
     </div>
   );

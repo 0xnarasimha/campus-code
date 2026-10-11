@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { FollowInfo } from "@/lib/actions/social";
+import {
+  FOLLOW_LABEL,
+  useFollowToggle,
+} from "@/components/social/use-follow";
 import { students, type RankingRow as RankingEntry } from "@/lib/mock-data";
 
 const badgeStyles: Record<number, string> = {
@@ -15,8 +20,19 @@ const badgeStyles: Record<number, string> = {
   3: "bg-amber-600 text-white",
 };
 
-function PodiumCard({ entry, rank }: { entry: RankingEntry; rank: number }) {
-  const [following, setFollowing] = useState(false);
+function PodiumCard({
+  entry,
+  rank,
+  follow,
+}: {
+  entry: RankingEntry;
+  rank: number;
+  follow?: FollowInfo;
+}) {
+  const { state, busy, toggle } = useFollowToggle(
+    entry.handle,
+    follow?.state ?? "none"
+  );
   const student = students.find((s) => s.handle === entry.handle);
   const stats = student
     ? `${student.solved} solved · CF ${student.cfRating} · ${student.commits} commits`
@@ -39,6 +55,12 @@ function PodiumCard({ entry, rank }: { entry: RankingEntry; rank: number }) {
             <Link href={`/profile/${entry.handle}`} className="hover:underline">
               @{entry.handle}
             </Link>
+            {follow?.isPrivate && (
+              <Lock
+                className="ml-1 inline h-3 w-3"
+                aria-label="Private profile"
+              />
+            )}
           </p>
         </div>
         <p className="text-sm font-bold text-ig-text dark:text-white">
@@ -46,24 +68,36 @@ function PodiumCard({ entry, rank }: { entry: RankingEntry; rank: number }) {
         </p>
         <p className="text-[11px] text-ig-secondary">{stats}</p>
         <Button
-          variant={following ? "secondary" : "primary"}
+          variant={state !== "none" ? "secondary" : "primary"}
           size="sm"
           className="w-full"
-          aria-pressed={following}
-          onClick={() => setFollowing((v) => !v)}
+          aria-pressed={state !== "none"}
+          disabled={busy || !follow}
+          onClick={() => void toggle()}
         >
-          {following ? "Following" : "Follow"}
+          {FOLLOW_LABEL[state]}
         </Button>
       </CardContent>
     </Card>
   );
 }
 
-export function Podium({ top3 }: { top3: RankingEntry[] }) {
+export function Podium({
+  top3,
+  follows,
+}: {
+  top3: RankingEntry[];
+  follows?: Record<string, FollowInfo>;
+}) {
   return (
     <div className="grid grid-cols-3 gap-3">
       {top3.map((entry) => (
-        <PodiumCard key={entry.handle} entry={entry} rank={entry.rank} />
+        <PodiumCard
+          key={entry.handle}
+          entry={entry}
+          rank={entry.rank}
+          follow={follows?.[entry.handle]}
+        />
       ))}
     </div>
   );
