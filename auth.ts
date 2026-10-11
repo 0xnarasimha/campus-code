@@ -4,6 +4,7 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "./lib/db";
+import { buildOAuthUserData } from "./lib/auth-helpers";
 import {
   authConfig,
   googleClientId,
@@ -20,9 +21,37 @@ import {
 // set. allowDangerousEmailAccountLinking links a verified Google email to an
 // existing credentials account with the same email (same-email
 // credentials↔Google accounts link) instead of raising OAuthAccountNotLinked.
+//
+// Custom createUser: the default Prisma adapter only writes {name, email,
+// image, emailVerified}, but our User model requires handle, passwordHash,
+// year, branch, avatarInitials (no DB defaults) — without this, every Google
+// signup fails with PrismaClientValidationError → error=Configuration page.
+// Handle is slugged from the Google profile name (email-prefix fallback) and
+// made unique by appending digits on conflict.
+const baseAdapter = PrismaAdapter(db);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(db),
+  adapter: {
+    ...baseAdapter,
+    createUser: async (data) => {
+      if (!data.email) throw new Error("OAuth profile has no email");
+      const oauthData = await buildOAuthUserData(db, {
+        name: data.name ?? "",
+        email: data.email,
+        emailVerified: data.emailVerified ?? null,
+      });
+      const user = await db.user.create({ data: oauthData });
+      return {
+        id: user.id,
+        handle: user.handle,
+        name: user.name,
+        email: user.email,
+        emailVerified: data.emailVerified ?? null,
+        image: null,
+      };
+    },
+  },
   providers: [
     ...(isGoogleEnabled
       ? [
