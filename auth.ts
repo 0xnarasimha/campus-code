@@ -4,7 +4,7 @@ import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { db } from "./lib/db";
-import { buildOAuthUserData } from "./lib/auth-helpers";
+import { createOAuthUser } from "./lib/auth-helpers";
 import {
   authConfig,
   googleClientId,
@@ -26,8 +26,10 @@ import {
 // image, emailVerified}, but our User model requires handle, passwordHash,
 // year, branch, avatarInitials (no DB defaults) — without this, every Google
 // signup fails with PrismaClientValidationError → error=Configuration page.
-// Handle is slugged from the Google profile name (email-prefix fallback) and
-// made unique by appending digits on conflict.
+// Handle is slugged from the Google profile name (email-prefix fallback),
+// made unique by appending digits on conflict, and the insert retries on
+// P2002 handle races (bounded) so a TOCTOU loser never surfaces a raw
+// constraint error.
 const baseAdapter = PrismaAdapter(db);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -36,12 +38,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...baseAdapter,
     createUser: async (data) => {
       if (!data.email) throw new Error("OAuth profile has no email");
-      const oauthData = await buildOAuthUserData(db, {
+      const user = await createOAuthUser(db, {
         name: data.name ?? "",
         email: data.email,
         emailVerified: data.emailVerified ?? null,
       });
-      const user = await db.user.create({ data: oauthData });
       return {
         id: user.id,
         handle: user.handle,

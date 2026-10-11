@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient, type User } from "@prisma/client";
 
 // Helpers for OAuth (Google) user creation. Extracted here so the logic is
 // probeable from a temp script without touching NextAuth internals.
@@ -62,28 +62,37 @@ export interface OAuthUserData {
   emailVerified: Date | null;
 }
 
-/** Full User row data for an OAuth signup, satisfying all required fields. */
-export async function buildOAuthUserData(
+const MAX_CREATE_ATTEMPTS = 5;
+
+function isHandleConflict(err: unknown): boolean {
+  if (
+    !(err instanceof Prisma.PrismaClientKnownRequestError) ||
+    err.code !== "P2002"
+  ) {
+    return false;
+  }
+  const target = (err.meta as { target?: unknown } | undefined)?.target;
+  const fields = Array.isArray(target) ? target.map(String) : [];
+  // No target info (Prisma version variance): treat as a handle conflict and
+  // retry; an email conflict surfaces via account-linking before createUser.
+  return fields.length === 0 || fields.includes("handle");
+}
+
+/**
+ * Race-safe OAuth user insert. findUnique-then-create has a TOCTOU window
+ * (two concurrent Google signups, same slug): the loser hits P2002 on the
+ * handle unique constraint. Regenerate the handle and retry (bounded); a
+ * residual P2002 (or any other error) is rethrown — Auth.js maps adapter
+ * failures to its generic error page, never a stack/500 leak.
+ */
+export async function createOAuthUser(
   db: Pick<PrismaClient, "user">,
   input: OAuthUserData,
-): Promise<{
-  handle: string;
-  name: string;
-  email: string;
-  passwordHash: string;
-  year: string;
-  branch: string;
-  avatarInitials: string;
-  verified: boolean;
-}> {
+): Promise<User> {
+  const base = slugifyHandle(input.name, input.email);
   const name = input.name.trim() || input.email.split("@")[0];
   const email = input.email.trim().toLowerCase();
-  const handle = await generateUniqueHandle(
-    db,
-    slugifyHandle(input.name, input.email),
-  );
-  return {
-    handle,
+  const row = {
     name,
     email,
     // OAuth users have no password; empty hash can never verify via bcrypt.
@@ -93,4 +102,19 @@ export async function buildOAuthUserData(
     avatarInitials: initialsFor(input.name, input.email),
     verified: input.emailVerified != null,
   };
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < MAX_CREATE_ATTEMPTS; attempt++) {
+    const handle = await generateUniqueHandle(db, base);
+    try {
+      return await (db.user as PrismaClient["user"]).create({
+        data: { ...row, handle },
+      });
+    } catch (err) {
+      if (!isHandleConflict(err)) throw err;
+      lastErr = err;
+    }
+  }
+  throw lastErr instanceof Error
+    ? lastErr
+    : new Error("Could not create OAuth user after retries");
 }
