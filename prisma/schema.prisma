@@ -39,6 +39,8 @@ model User {
   createdSpots  StudySpot[]
   sentMeetups     MeetupRequest[] @relation("meetupRequester")
   receivedMeetups MeetupRequest[] @relation("meetupRecipient")
+  ownedClubs  Club[]
+  rsvps       Rsvp[]
 }
 
 model Account {
@@ -173,4 +175,38 @@ model MeetupRequest {
 
   @@index([requesterId])
   @@index([recipientId])
+}
+
+model Club {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String      @default("")
+  ownerId     String
+  owner       User        @relation(fields: [ownerId], references: [id])
+  events      ClubEvent[]
+  createdAt   DateTime    @default(now())
+}
+
+model ClubEvent {
+  id        String   @id @default(cuid())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  title     String
+  date      DateTime
+  venue     String   @default("")
+  createdAt DateTime @default(now())
+  rsvps     Rsvp[]
+
+  @@index([clubId])
+  @@index([date])
+}
+
+model Rsvp {
+  eventId   String
+  event     ClubEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@unique([eventId, userId])
 }

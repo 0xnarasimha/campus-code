@@ -156,6 +156,41 @@ async function main() {
   console.log(
     `seed ok: ${students.length} users, ${posts.length} posts, ${spots.length} spots`
   );
+
+  // 4. Clubs + one future event each — rerunnable upserts, existing data intact.
+  const clubOwners: Record<string, string> = {
+    "Codeforces Crew": "aditya_sharma_mbu",
+    "AI/ML Guild": "krishnan_p",
+    "CyberSec Circle": "rohit_varma_sec",
+  };
+  const clubEvents: Record<string, { id: string; title: string; daysOut: number; venue: string }> = {
+    "Codeforces Crew": { id: "seed-event-cf", title: "Weekly Contest Night", daysOut: 7, venue: "CSE Block B · Lab 4" },
+    "AI/ML Guild": { id: "seed-event-aiml", title: "Paper Reading: Transformers", daysOut: 14, venue: "Innovation Hub · Studio A" },
+    "CyberSec Circle": { id: "seed-event-sec", title: "CTF Bootcamp Kickoff", daysOut: 21, venue: "Central Library · 2F" },
+  };
+  for (const [name, ownerHandle] of Object.entries(clubOwners)) {
+    const ownerId = idByHandle.get(ownerHandle);
+    if (!ownerId) throw new Error(`seed: missing owner ${ownerHandle}`);
+    const club = await prisma.club.upsert({
+      where: { name },
+      update: { ownerId },
+      create: { name, description: `${name} — Study Hub chapter.`, ownerId },
+    });
+    const ev = clubEvents[name];
+    if (!ev) continue;
+    await prisma.clubEvent.upsert({
+      where: { id: ev.id },
+      update: { clubId: club.id, title: ev.title, venue: ev.venue },
+      create: {
+        id: ev.id,
+        clubId: club.id,
+        title: ev.title,
+        date: new Date(Date.now() + ev.daysOut * 86_400_000),
+        venue: ev.venue,
+      },
+    });
+  }
+  console.log("seed ok: 3 clubs + 3 events");
 }
 
 main()

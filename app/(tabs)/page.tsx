@@ -3,7 +3,6 @@ import { auth } from "@/auth";
 import { getFeed } from "@/lib/feed";
 import { PostCard } from "@/components/feed/PostCard";
 import { PostSkeleton } from "@/components/feed/PostSkeleton";
-import { StoryRow } from "@/components/feed/StoryRow";
 
 function FeedSkeleton() {
   return (
@@ -30,7 +29,6 @@ async function FeedList() {
 export default function Home() {
   return (
     <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <StoryRow />
       <Suspense fallback={<FeedSkeleton />}>
         <FeedList />
       </Suspense>
