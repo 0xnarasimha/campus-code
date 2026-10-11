@@ -23,15 +23,53 @@ function initialsOf(name: string): string {
     .toUpperCase();
 }
 
+function dmParam(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("dm");
+}
+
+function dmEntry(handle: string): Conversation {
+  return {
+    id: `dm-${handle}`,
+    name: handle,
+    handle,
+    preview: "Say hello",
+    time: "Now",
+    unread: 0,
+    online: false,
+    initials: handle.slice(0, 2).toUpperCase(),
+  };
+}
+
 export default function MessagesPage() {
-  const [activeId, setActiveId] = useState(conversations[0]?.id ?? "");
-  const [convs, setConvs] = useState<Conversation[]>(conversations);
+  // ?dm=<handle> deep-link from the profile Message button (which routes
+  // via startThread, so the real 1:1 thread already exists server-side).
+  // Resolved in the lazy initializers so no sync setState-in-effect is
+  // needed; the merge effect below preserves the entry.
+  const [convs, setConvs] = useState<Conversation[]>(() => {
+    const dm = dmParam();
+    if (!dm || conversations.some((c) => c.handle === dm)) return conversations;
+    return [dmEntry(dm), ...conversations];
+  });
+  const [activeId, setActiveId] = useState(() => {
+    const dm = dmParam();
+    if (!dm) return conversations[0]?.id ?? "";
+    return conversations.find((c) => c.handle === dm)?.id ?? `dm-${dm}`;
+  });
   const [threads, setThreads] = useState<Record<string, Message[]>>(messagesById);
-  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+  const [mobileView, setMobileView] = useState<"list" | "chat">(() =>
+    dmParam() ? "chat" : "list"
+  );
   const [infoOpen, setInfoOpen] = useState(false);
 
   const conversation = convs.find((c) => c.id === activeId) ?? convs[0];
   const messages = threads[conversation.id] ?? [];
+
+  // ?dm=<handle> deep-link from the profile Message button (which routes
+  // via startThread, so the real 1:1 thread already exists server-side).
+  // Resolved in the lazy initializers above so no sync setState-in-effect
+  // is needed; plain-text sends there stay gated by ChatWindow.
+  const dmHandle = dmParam();
 
   // Real meetup rows merged into the mock threads: each request involving
   // the viewer becomes a "[meetup:<id>] …" message (rendered as MeetupCard
@@ -43,6 +81,10 @@ export default function MessagesPage() {
     getMyMeetups().then((res) => {
       if (!live || !res.ok) return;
       const merged: Conversation[] = [...conversations];
+      // Keep a deep-linked entry the lazy initializer may have prepended.
+      if (dmHandle && !merged.some((c) => c.handle === dmHandle)) {
+        merged.unshift(dmEntry(dmHandle));
+      }
       for (const m of res.meetups) {
         if (!merged.some((c) => c.handle === m.otherHandle)) {
           merged.unshift({
@@ -82,7 +124,7 @@ export default function MessagesPage() {
     return () => {
       live = false;
     };
-  }, []);
+  }, [dmHandle]);
 
   function handleSelect(id: string) {
     setActiveId(id);

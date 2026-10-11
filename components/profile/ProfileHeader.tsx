@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { BadgeCheck, Link2, Lock, Share } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FollowState } from "@/lib/actions/social";
+import { startThread } from "@/lib/actions/chat";
 import { FOLLOW_LABEL, useFollowToggle } from "@/components/social/use-follow";
 import type { Profile } from "@/lib/mock-data";
 
@@ -24,6 +26,28 @@ export function ProfileHeader({
     profile.handle,
     initialFollow
   );
+  const router = useRouter();
+  const [dmBusy, setDmBusy] = useState(false);
+  const [dmError, setDmError] = useState<string | null>(null);
+
+  // New chats route via startThread: existing 1:1 thread is reused, a fresh
+  // one is created when allowed, and private strangers get the friendly
+  // "Follow @x to message them" error instead of a thread.
+  async function message() {
+    if (dmBusy) return;
+    setDmBusy(true);
+    setDmError(null);
+    try {
+      const res = await startThread(profile.handle);
+      if (!res.ok) {
+        setDmError(res.error);
+        return;
+      }
+      router.push(`/messages?dm=${encodeURIComponent(profile.handle)}`);
+    } finally {
+      setDmBusy(false);
+    }
+  }
   const followersDelta =
     (state === "accepted" ? 1 : 0) - (initialFollow === "accepted" ? 1 : 0);
   const initials = profile.name
@@ -127,19 +151,21 @@ export function ProfileHeader({
             >
               {busy ? "…" : FOLLOW_LABEL[state]}
             </button>
-            <Link
-              href="/messages"
+            <button
+              type="button"
+              onClick={() => void message()}
+              disabled={dmBusy}
               aria-label={`Message ${profile.handle}`}
-              className="flex flex-1 items-center justify-center rounded-lg bg-ig-subtle px-4 py-2 text-sm font-semibold text-ig-text dark:bg-white/10 dark:text-white"
+              className="flex flex-1 items-center justify-center rounded-lg bg-ig-subtle px-4 py-2 text-sm font-semibold text-ig-text disabled:opacity-60 dark:bg-white/10 dark:text-white"
             >
-              Message
-            </Link>
+              {dmBusy ? "…" : "Message"}
+            </button>
           </>
         )}
       </div>
-      {!isOwn && error && (
+      {!isOwn && (error || dmError) && (
         <p role="alert" className="text-xs text-rose-500">
-          {error}
+          {dmError ?? error}
         </p>
       )}
     </section>

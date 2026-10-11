@@ -6,6 +6,7 @@ import { CheckCheck, Info, Phone, Send, Video } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MeetupCard } from "@/components/chat/MeetupCard";
+import { canMessage } from "@/lib/actions/chat";
 import { cn } from "@/lib/utils";
 import type { Conversation, Message } from "@/lib/mock-data";
 
@@ -37,12 +38,30 @@ function stripMarker(text: string): string {
 
 export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoOpen }: ChatWindowProps) {
   const [draft, setDraft] = useState("");
+  const [gateError, setGateError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  function send() {
+  // Private-DM gate: plain-text sends to a private stranger are blocked
+  // with an inline friendly error and never reach onSend. Unknown handles
+  // (mock list entries), logged-out viewers, or DB failures fall through to
+  // the local mock send so the mock list keeps working. Meetup
+  // request/accept/decline flows (MeetupCard) bypass this entirely.
+  async function send() {
     const text = draft.trim();
-    if (!text) return;
-    onSend(text);
-    setDraft("");
+    if (!text || checking) return;
+    setChecking(true);
+    setGateError(null);
+    try {
+      const gate = await canMessage(conversation.handle);
+      if (gate.ok && !gate.allowed) {
+        setGateError(gate.reason ?? "You can't message this account yet");
+        return;
+      }
+      onSend(text);
+      setDraft("");
+    } finally {
+      setChecking(false);
+    }
   }
 
   const lastOwnId = [...messages].reverse().find((m) => m.from === "me")?.id;
@@ -173,9 +192,12 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
       <div className="flex shrink-0 items-center gap-3 px-4 py-4 md:px-5">
         <input
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            if (gateError) setGateError(null);
+          }}
           onKeyDown={(e) => {
-            if (e.key === "Enter") send();
+            if (e.key === "Enter") void send();
           }}
           placeholder={`Message ${conversation.name}...`}
           aria-label="Message input"
@@ -183,14 +205,19 @@ export function ChatWindow({ conversation, messages, onSend, onToggleInfo, infoO
         />
         <Button
           size="icon"
-          onClick={send}
-          disabled={!draft.trim()}
+          onClick={() => void send()}
+          disabled={!draft.trim() || checking}
           aria-label="Send message"
           className="h-14 w-14 shrink-0 rounded-full"
         >
           <Send className="h-5 w-5" />
         </Button>
       </div>
+      {gateError && (
+        <p role="alert" className="shrink-0 px-4 pb-3 text-sm text-red-500 md:px-5">
+          {gateError}
+        </p>
+      )}
     </div>
   );
 }
