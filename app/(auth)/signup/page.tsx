@@ -18,6 +18,7 @@ export default function SignupPage() {
   // Fail-soft gate: see login page — the Google provider only exists when
   // GOOGLE_CLIENT_ID/SECRET are set server-side.
   const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
   useEffect(() => {
     fetch("/api/auth/providers")
       .then((r) => (r.ok ? r.json() : {}))
@@ -157,10 +158,18 @@ export default function SignupPage() {
           </div>
           <button
             type="button"
-            onClick={() => signIn("google", { redirectTo: "/" })}
-            className="rounded-lg border border-ig-border bg-surface px-3 py-2.5 text-sm font-semibold text-ig-text transition-all duration-150 active:scale-95 dark:border-white/10 dark:text-white"
+            disabled={pending || googlePending}
+            onClick={async () => {
+              setGooglePending(true);
+              try {
+                await signIn("google", { redirectTo: "/" });
+              } catch {
+                setGooglePending(false);
+              }
+            }}
+            className="rounded-lg border border-ig-border bg-surface px-3 py-2.5 text-sm font-semibold text-ig-text transition-all duration-150 active:scale-95 disabled:opacity-60 dark:border-white/10 dark:text-white"
           >
-            Continue with Google
+            {googlePending ? "Redirecting to Google…" : "Continue with Google"}
           </button>
         </>
       )}

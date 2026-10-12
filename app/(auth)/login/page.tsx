@@ -20,6 +20,7 @@ function LoginForm() {
   // GOOGLE_CLIENT_ID/SECRET are set, so ask the auth API rather than
   // reading env (unavailable in this client component).
   const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
   useEffect(() => {
     fetch("/api/auth/providers")
       .then((r) => (r.ok ? r.json() : {}))
@@ -151,12 +152,18 @@ function LoginForm() {
               </div>
               <button
                 type="button"
-                onClick={() =>
-                  signIn("google", {
-                    redirectTo: safeRedirectTo(searchParams.get("callbackUrl")),
-                  })
-                }
-                className="flex h-14 w-full items-center justify-center gap-2 px-3 text-base font-semibold text-ig-blue"
+                disabled={pending || googlePending}
+                onClick={async () => {
+                  setGooglePending(true);
+                  try {
+                    await signIn("google", {
+                      redirectTo: safeRedirectTo(searchParams.get("callbackUrl")),
+                    });
+                  } catch {
+                    setGooglePending(false);
+                  }
+                }}
+                className="flex h-14 w-full items-center justify-center gap-2 px-3 text-base font-semibold text-ig-blue transition-opacity disabled:opacity-60"
               >
                 <span
                   aria-hidden="true"
@@ -164,7 +171,7 @@ function LoginForm() {
                 >
                   G
                 </span>
-                Log in with Google
+                {googlePending ? "Redirecting to Google…" : "Log in with Google"}
               </button>
             </>
           )}
